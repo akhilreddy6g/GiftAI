@@ -1,0 +1,55 @@
+# Runs GiftAI locally with one command:  docker compose up --build
+#
+# db       Postgres 16 with pgvector, data kept in a named volume
+# migrate  applies Alembic migrations, then exits; the backend waits for it
+# backend  the FastAPI app on http://localhost:8000 (docs at /docs)
+
+name: giftai
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: giftai
+      POSTGRES_PASSWORD: giftai  # local-only credentials, never used in a hosted database
+      POSTGRES_DB: giftai
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./backend/scripts/create_test_database.sql:/docker-entrypoint-initdb.d/create_test_database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U giftai -d giftai"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://giftai:giftai@db:5432/giftai
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    # Needs SUPABASE_URL at least: copy .env.example to .env first.
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      DATABASE_URL: postgresql://giftai:giftai@db:5432/giftai
+      CORS_ALLOWED_ORIGINS: http://localhost:4200
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  db-data:
