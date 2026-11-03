@@ -7,7 +7,9 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "alembic>=1.14",
     "fastapi>=0.115",
+    "fastembed>=0.5",
     "httpx>=0.28",
+    "numpy>=2.1",
     "pgvector>=0.3",
     "psycopg[binary,pool]>=3.2",
     "pydantic>=2.9",
@@ -24,6 +26,15 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.8",
 ]
+# Offline catalog pipeline (run on a laptop, never deployed): ALS training needs these.
+offline = [
+    "implicit>=0.7",
+    "scipy>=1.14",
+]
+
+[tool.uv]
+# `uv sync` installs everything for development; the Docker image opts out of both groups.
+default-groups = ["dev", "offline"]
 
 [build-system]
 requires = ["hatchling"]
@@ -36,7 +47,7 @@ packages = ["src/giftai"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-src = ["src", "tests", "scripts", "migrations"]
+src = ["src", "tests", "scripts", "migrations", "pipelines"]
 
 [tool.ruff.lint]
 select = [
@@ -60,6 +71,9 @@ ignore = [
     "ANN401",  # Any is sometimes the honest type for **kwargs passthroughs
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = ["giftai", "pipelines", "tests"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]  # assert is how pytest works
 
@@ -72,7 +86,7 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "f
 python_version = "3.13"
 strict = true
 mypy_path = "src"
-files = ["src", "tests", "scripts", "migrations"]
+files = ["src", "tests", "scripts", "migrations", "pipelines"]
 plugins = ["pydantic.mypy"]
 warn_unreachable = true
 
@@ -82,7 +96,7 @@ init_typed = true
 warn_required_dynamic_aliases = true
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*"]
+module = ["pgvector.*", "fastembed.*", "implicit.*", "scipy.*", "threadpoolctl.*"]
 ignore_missing_imports = true
 
 # --- pytest -----------------------------------------------------------------

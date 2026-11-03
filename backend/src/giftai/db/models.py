@@ -4,8 +4,9 @@ Alembic imports this module before comparing models with the database. Each feat
 stores data adds its ``models`` module here.
 """
 
+from giftai.catalog.models import Product, ProductNeighbor
 from giftai.chats.models import Chat, Message
 from giftai.recipients.models import Recipient
 from giftai.users.models import User
 
-__all__ = ["Chat", "Message", "Recipient", "User"]
+__all__ = ["Chat", "Message", "Product", "ProductNeighbor", "Recipient", "User"]

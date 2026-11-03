@@ -11,7 +11,7 @@ guided by a gifting rulebook distilled from books and research on gift giving.
 ## Repository layout
 
 ```
-backend/     FastAPI service, Alembic migrations, tests   (see backend/README.md)
+backend/     FastAPI service, migrations, catalog pipeline, tests   (see backend/README.md)
 frontend/    Angular app                                  (coming in a later milestone)
 .github/     CI workflows
 ```
@@ -37,6 +37,11 @@ Interactive API docs are at http://localhost:8000/docs (disabled in production).
 
 Every `/api/v1` endpoint needs a Supabase access token. Until the frontend exists, get one
 for a test user with `backend/scripts/get_access_token.py` (see the backend README).
+
+The database starts with no products. Product search works once you run the offline
+catalog pipeline, which downloads the dataset, picks giftable products, embeds them, learns
+"also liked" lists and loads everything (see "Building the product catalog" in the
+backend README).
 
 ## Configuration
 

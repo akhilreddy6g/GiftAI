@@ -222,6 +222,7 @@ __marimo__/
 # --- GiftAI ---------------------------------------------------------------
 # Raw source books and downloaded datasets stay on the developer's machine (copyright, size).
 /data/
+backend/data/
 # Model files are published as GitHub Release assets, never committed.
 *.lgbm
 *.onnx
