@@ -61,6 +61,44 @@ Each feature package has the same shape:
 Every product carries `amazon_url` and `amazon_search_url` (a search for its name, for when
 the listing has gone). Prices are 2023 prices from the dataset, so `price_2023` says so.
 
+## Gifting rules
+
+| Endpoint                     | What it returns                                                  |
+|------------------------------|------------------------------------------------------------------|
+| `GET /api/v1/rules`          | Active rules that apply to a situation. Optional `relationship`, `occasion`, `budget_min`, `budget_max` (whole dollars). Rules tagged for no relationship or occasion apply to all; budget-limited rules apply when their range overlaps the budget |
+| `GET /api/v1/rules/{rule_id}`| One rule, such as `R-012`, with the sources it cites (also retired ones, for old recommendations) |
+
+Relationships and occasions use the same values as recipients and chats (`giftai/gifting.py`).
+
+## Building the rulebook
+
+The rules are ours: drafted by an LLM from books and papers, then approved, edited or
+rejected by a person. Only `rulebook/rulebook.yaml` (the rules and their citations) is
+committed; the sources and anything drawn from their text stay in `backend/data/rulebook/`,
+which git ignores.
+
+| Step      | What it does                                                                 |
+|-----------|------------------------------------------------------------------------------|
+| `extract` | Splits each file in `data/rulebook/sources.yaml` into sections: PDFs by their bookmarks (or every 12 pages), EPUBs by reading order, text and Markdown by headings |
+| `draft`   | Asks Gemini (free tier, about 8 requests a minute) for up to 8 candidate rules per section, in its own words. Resumable: sections already drafted are skipped |
+| `group`   | Groups drafts that say the same thing (bge-small similarity), so each idea is reviewed once and cites every source behind it |
+| `review`  | Interactive: accept a wording, edit it in `$EDITOR`, reject or skip. Saves after every decision; run it again to carry on |
+| `seed`    | Loads `rulebook/rulebook.yaml` into the database in `DATABASE_URL` in one transaction. Rules removed from the file are retired, not deleted |
+
+```bash
+cd backend
+mkdir -p data/rulebook   # put the files here and list them in data/rulebook/sources.yaml
+uv run python -m pipelines.rulebook extract   # prints the expected sources.yaml format if it's missing
+echo 'GEMINI_API_KEY=...' >> .env
+uv run python -m pipelines.rulebook draft
+uv run python -m pipelines.rulebook group
+uv run python -m pipelines.rulebook review
+uv run python -m pipelines.rulebook seed      # then commit rulebook/rulebook.yaml
+```
+
+`--sources ID ...` limits `extract`, `draft` and `review` to some sources. Scanned PDFs
+have no text layer and need OCR first.
+
 ## Building the product catalog
 
 The catalog comes from the [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/)
