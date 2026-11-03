@@ -19,7 +19,7 @@ SearchText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=
 Asin = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9]{10}$")]
 
 MAX_SEARCH_RESULTS = 50
-MAX_NEIGHBORS = 50
+MAX_NEIGHBORS = 20
 
 
 class ProductSearchQuery(BaseModel):

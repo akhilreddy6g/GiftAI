@@ -15,7 +15,6 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    UniqueConstraint,
     true,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -67,18 +66,20 @@ class Product(Timestamps, Base):
 
 
 class ProductNeighbor(Base):
-    """ "People who liked this also liked": the top products for each one, from ALS."""
+    """People who liked this also liked: the top products for each one, from ALS.
+
+    This is the catalog's biggest table (about 20 rows per product), so it carries only
+    the primary key index. The pipeline guarantees each pair appears once, and products
+    are never deleted, so no index on ``neighbor_asin`` is needed for cascades.
+    """
 
     __tablename__ = "product_neighbors"
-    __table_args__ = (UniqueConstraint("product_asin", "neighbor_asin"),)
 
     product_asin: Mapped[str] = mapped_column(
         ForeignKey("products.asin", ondelete="CASCADE"), primary_key=True
     )
     # 1 is the closest neighbor.
     rank: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
-    neighbor_asin: Mapped[str] = mapped_column(
-        ForeignKey("products.asin", ondelete="CASCADE"), index=True
-    )
+    neighbor_asin: Mapped[str] = mapped_column(ForeignKey("products.asin", ondelete="CASCADE"))
     # Cosine similarity of the two products' ALS factors.
     score: Mapped[float] = mapped_column(Float)

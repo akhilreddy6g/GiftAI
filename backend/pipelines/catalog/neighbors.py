@@ -41,7 +41,8 @@ class AlsParameters:
     min_liked_rating: float = 4.0
     # Products liked by fewer people get no list and appear in no list: too little signal.
     min_item_likes: int = 5
-    neighbors_per_product: int = 50
+    # 20 is plenty to widen a search; 50 would push the catalog past the free 1 GB.
+    neighbors_per_product: int = 20
     evaluation_users: int = 10_000
     random_seed: int = 42
 

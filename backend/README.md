@@ -56,7 +56,7 @@ Each feature package has the same shape:
 |--------------------------------------------|--------------------------------------------------|
 | `GET /api/v1/products/search?q=`           | Products closest in meaning to `q`, best first. Optional `limit` (max 50), `min_price`, `max_price` in whole dollars. |
 | `GET /api/v1/products/{asin}`              | One product                                      |
-| `GET /api/v1/products/{asin}/also-liked`   | Products liked by the same reviewers (`limit`, max 50) |
+| `GET /api/v1/products/{asin}/also-liked`   | Products liked by the same reviewers (`limit`, max 20) |
 
 Every product carries `amazon_url` and `amazon_search_url` (a search for its name, for when
 the listing has gone). Prices are 2023 prices from the dataset, so `price_2023` says so.
@@ -72,7 +72,7 @@ server or the database.
 | `download`  | Fetches each category's product metadata and 5-core ratings into `backend/data/catalog/raw/` (skips files already there) |
 | `select`    | Keeps good gifts: price $5 to $500, 50+ ratings, 3.8+ stars, an image, reviewed since Sept 2022, no replacement parts and the like. Takes the most-reviewed per category, about 85,000 in total |
 | `embed`     | Embeds each product's title, brand, category and features with bge-small (the same model search uses) |
-| `neighbors` | Trains ALS on who liked what (4+ stars), reports Recall@10 and @50 against a popularity baseline, and keeps each product's top 50 "also liked" |
+| `neighbors` | Trains ALS on who liked what (4+ stars), reports Recall@10 and @50 against a popularity baseline, and keeps each product's top 20 "also liked" |
 | `load`      | Upserts products and replaces neighbor lists in the database in `DATABASE_URL`, in one transaction |
 
 ```bash

@@ -50,6 +50,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # Model downloads log every HTTP request; only their problems are worth showing.
+    for noisy in ("httpx", "huggingface_hub"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     try:
         run(args)
     except (FileNotFoundError, RuntimeError, ValueError, httpx.HTTPError, psycopg.Error) as error:

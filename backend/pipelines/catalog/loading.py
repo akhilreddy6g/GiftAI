@@ -3,6 +3,10 @@
 Re-running is safe: products are upserted, products missing from the new catalog are
 marked out of catalog (never deleted, since recommendations may point at them), and the
 neighbor lists are replaced. If anything fails, the database keeps the previous catalog.
+
+Storage matters on the free 1 GB plan, so a reload avoids leaving dead copies behind:
+unchanged products aren't rewritten, the neighbor table is truncated rather than deleted
+row by row, and a vacuum afterwards lets the next load reuse any freed space.
 """
 
 import logging
@@ -73,6 +77,16 @@ ON CONFLICT (asin) DO UPDATE SET
     embedding = EXCLUDED.embedding,
     in_catalog = true,
     updated_at = now()
+WHERE (
+    products.title, products.brand, products.main_category, products.category_path,
+    products.price_2023, products.rating_average, products.rating_count, products.image_url,
+    products.short_description, products.last_reviewed_on, products.embedding,
+    products.in_catalog
+) IS DISTINCT FROM (
+    EXCLUDED.title, EXCLUDED.brand, EXCLUDED.main_category, EXCLUDED.category_path,
+    EXCLUDED.price_2023, EXCLUDED.rating_average, EXCLUDED.rating_count, EXCLUDED.image_url,
+    EXCLUDED.short_description, EXCLUDED.last_reviewed_on, EXCLUDED.embedding, true
+)
 """  # noqa: S608  # fixed column names, no user input
 
 _RETIRE_MISSING = """
@@ -126,13 +140,13 @@ def load_catalog(
         ) as copy:
             for row in neighbors:
                 copy.write_row((row.product_asin, row.rank, row.neighbor_asin, row.score))
-        cursor.execute("DELETE FROM product_neighbors")
+        cursor.execute("TRUNCATE product_neighbors")
         cursor.execute(_REPLACE_NEIGHBORS)
         neighbor_rows = cursor.rowcount
 
-    # Fresh statistics so the planner uses the new indexes well (outside the transaction).
-    connection.execute("ANALYZE products")
-    connection.execute("ANALYZE product_neighbors")
+    # Outside the transaction: reclaim dead rows and refresh the planner's statistics.
+    connection.execute("VACUUM (ANALYZE) products")
+    connection.execute("VACUUM (ANALYZE) product_neighbors")
     size_row = connection.execute("SELECT pg_database_size(current_database())").fetchone()
     size_mb = (size_row[0] if size_row else 0) / 1e6
     return LoadReport(len(products), retired, neighbor_rows, round(size_mb, 1))
