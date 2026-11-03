@@ -76,15 +76,19 @@ server or the database.
 | `load`      | Upserts products and replaces neighbor lists in the database in `DATABASE_URL`, in one transaction |
 
 ```bash
+docker compose up --build           # from the repo root: the local database, migrated
 cd backend
-uv sync                                                  # includes the pipeline's extras
-# a quick trial on one small category (minutes):
+uv sync                             # includes the pipeline's extras
+export DATABASE_URL=postgresql://giftai:giftai@localhost:5432/giftai
+# a quick trial on one smaller category:
 uv run python -m pipelines.catalog all --categories Musical_Instruments --scale 0.5
 # the full catalog (downloads several GB; embedding takes a while on a laptop CPU):
 uv run python -m pipelines.catalog all
-# load into Aiven instead of the local database:
+# load the same files into Aiven (run `alembic upgrade head` against it first):
 DATABASE_URL='postgres://...' uv run python -m pipelines.catalog load
 ```
+
+The first `embed` downloads the bge-small model (about 70 MB).
 
 Each step reads the previous step's files, so you can re-run any single step, for example
 `neighbors` with `--als-factors 128`. The evaluation lands in
