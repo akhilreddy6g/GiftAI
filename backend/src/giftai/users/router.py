@@ -15,7 +15,7 @@ async def get_my_account(user: CurrentUser) -> UserRead:
 @router.delete(
     "",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete the account and everything GiftAI stores about it",
+    summary="Delete the account; signing in again starts a fresh, empty one",
 )
 async def delete_my_account(user: CurrentUser, service: UserServiceDep) -> None:
     await service.delete_account(user)
