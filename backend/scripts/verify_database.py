@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import psycopg
 
-from giftai.core.config import get_settings
+from giftai.core.config import get_database_settings
 
 MINIMUM_SERVER_VERSION = 150000  # Postgres 15
 # The catalog stores 384-dimension half-precision vectors (bge-small-en-v1.5).
@@ -102,7 +102,7 @@ def run_checks(database_url: str) -> list[CheckResult]:
 
 
 def main() -> int:
-    database_url = get_settings().database_url.get_secret_value()
+    database_url = get_database_settings().database_url.get_secret_value()
     try:
         results = run_checks(database_url)
     except psycopg.OperationalError as error:

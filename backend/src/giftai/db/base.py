@@ -1,7 +1,10 @@
-"""The declarative base every ORM model inherits from."""
+"""The declarative base and the column conventions every table shares."""
 
-from sqlalchemy import MetaData
-from sqlalchemy.orm import DeclarativeBase
+import uuid
+from datetime import datetime
+
+from sqlalchemy import DateTime, MetaData, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Deterministic constraint names keep Alembic autogenerate diffs stable across databases.
 NAMING_CONVENTION = {
@@ -15,3 +18,18 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class UuidPrimaryKey:
+    """A random UUID id: unguessable in URLs and safe to generate in the app."""
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+
+
+class Timestamps:
+    """When a row was created and last changed, set by the database clock."""
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

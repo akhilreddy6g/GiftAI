@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine
 
-from giftai.core.config import get_settings
+from giftai.core.config import get_database_settings
 from giftai.db import models  # noqa: F401  # registers every model on Base.metadata
 from giftai.db.base import Base
 
@@ -18,7 +18,7 @@ target_metadata = Base.metadata
 
 def run_migrations_online() -> None:
     # Migrations are a one-off batch job, so a plain synchronous connection is enough.
-    engine = create_engine(get_settings().sqlalchemy_database_url)
+    engine = create_engine(get_database_settings().sqlalchemy_database_url)
     try:
         with engine.connect() as connection:
             context.configure(

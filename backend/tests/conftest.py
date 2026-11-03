@@ -9,6 +9,7 @@ import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 import pytest
 from alembic import command
@@ -17,19 +18,30 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
 
-from giftai.core.config import Environment, Settings, get_settings
+from giftai.auth.dependencies import get_token_verifier
+from giftai.core.config import Environment, Settings, get_database_settings
 from giftai.main import create_app
+from tests.auth_helpers import TEST_SUPABASE_URL, TokenIssuer
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 UNREACHABLE_DATABASE_URL = "postgresql://giftai:giftai@127.0.0.1:1/unreachable"
 
 
-def make_settings(database_url: str = UNREACHABLE_DATABASE_URL) -> Settings:
-    return Settings(
-        environment=Environment.TEST,
-        database_url=database_url,  # type: ignore[arg-type]  # pydantic coerces str
-        cors_allowed_origins=["http://localhost:4200"],
-    )
+def make_settings(database_url: str = UNREACHABLE_DATABASE_URL, **overrides: Any) -> Settings:
+    values: dict[str, Any] = {
+        "environment": Environment.TEST,
+        "database_url": database_url,
+        "supabase_url": TEST_SUPABASE_URL,
+        "cors_allowed_origins": ["http://localhost:4200"],
+    }
+    return Settings(**(values | overrides))
+
+
+def build_test_app(settings: Settings, token_issuer: TokenIssuer) -> FastAPI:
+    """The real app, trusting tokens from ``token_issuer`` instead of Supabase."""
+    app = create_app(settings)
+    app.dependency_overrides[get_token_verifier] = lambda: token_issuer.verifier
+    return app
 
 
 @asynccontextmanager
@@ -42,9 +54,14 @@ async def open_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
         yield client
 
 
+@pytest.fixture(scope="session")
+def token_issuer() -> TokenIssuer:
+    return TokenIssuer()
+
+
 @pytest.fixture
-def offline_app() -> FastAPI:
-    return create_app(make_settings())
+def offline_app(token_issuer: TokenIssuer) -> FastAPI:
+    return build_test_app(make_settings(), token_issuer)
 
 
 @pytest.fixture
@@ -60,28 +77,24 @@ def test_database_url() -> Iterator[str]:
     if not database_url:
         pytest.skip("TEST_DATABASE_URL is not set")
 
-    settings = make_settings(database_url)
-    engine = create_engine(settings.sqlalchemy_database_url)  # psycopg 3 serves sync too
+    engine = create_engine(make_settings(database_url).sqlalchemy_database_url)
     with engine.begin() as connection:
         connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public"))
     engine.dispose()
 
     # Alembic's env.py reads the URL from settings, exactly as it does in production.
-    previous_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = database_url
-    get_settings.cache_clear()
-    try:
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("DATABASE_URL", database_url)
+        get_database_settings.cache_clear()
         command.upgrade(Config(str(BACKEND_ROOT / "alembic.ini")), "head")
-        yield database_url
-    finally:
-        if previous_url is None:
-            os.environ.pop("DATABASE_URL", None)
-        else:
-            os.environ["DATABASE_URL"] = previous_url
-        get_settings.cache_clear()
+    get_database_settings.cache_clear()
+    yield database_url
 
 
 @pytest.fixture
-async def database_client(test_database_url: str) -> AsyncIterator[AsyncClient]:
-    async with open_client(create_app(make_settings(test_database_url))) as client:
+async def database_client(
+    test_database_url: str, token_issuer: TokenIssuer
+) -> AsyncIterator[AsyncClient]:
+    app = build_test_app(make_settings(test_database_url), token_issuer)
+    async with open_client(app) as client:
         yield client

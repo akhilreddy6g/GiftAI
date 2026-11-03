@@ -18,9 +18,10 @@ frontend/    Angular app                                  (coming in a later mil
 
 ## Run it locally
 
-Requires Docker.
+Requires Docker and a free [Supabase](https://supabase.com) project (used only for sign-in).
 
 ```bash
+cp .env.example .env      # then set SUPABASE_URL and SUPABASE_ANON_KEY
 docker compose up --build
 ```
 
@@ -33,6 +34,9 @@ curl http://localhost:8000/health/ready
 ```
 
 Interactive API docs are at http://localhost:8000/docs (disabled in production).
+
+Every `/api/v1` endpoint needs a Supabase access token. Until the frontend exists, get one
+for a test user with `backend/scripts/get_access_token.py` (see the backend README).
 
 ## Configuration
 

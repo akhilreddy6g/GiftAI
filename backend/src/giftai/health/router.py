@@ -3,19 +3,12 @@
 They are public on purpose: they reveal only up or down, never configuration.
 """
 
-from typing import Annotated
+from fastapi import APIRouter, Response, status
 
-from fastapi import APIRouter, Depends, Response, status
-
-from giftai.db.session import DatabaseDep
+from giftai.health.dependencies import HealthServiceDep
 from giftai.health.schemas import CheckStatus, LivenessReport, ReadinessReport
-from giftai.health.service import HealthService
 
 router = APIRouter(prefix="/health", tags=["health"])
-
-
-def get_health_service(database: DatabaseDep) -> HealthService:
-    return HealthService(database)
 
 
 @router.get("/live", summary="The process is up")
@@ -30,7 +23,7 @@ async def live() -> LivenessReport:
 )
 async def ready(
     response: Response,
-    health_service: Annotated[HealthService, Depends(get_health_service)],
+    health_service: HealthServiceDep,
 ) -> ReadinessReport:
     report = await health_service.check_readiness()
     if report.status is CheckStatus.FAILING:
