@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- GiftAI ---------------------------------------------------------------
+# Raw source books and downloaded datasets stay on the developer's machine (copyright, size).
+/data/
+# Model files are published as GitHub Release assets, never committed.
+*.lgbm
+*.onnx
