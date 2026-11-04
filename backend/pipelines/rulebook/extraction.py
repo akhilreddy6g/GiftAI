@@ -4,6 +4,7 @@ PDFs are split by their outline (bookmarks) when they have one and by page range
 otherwise; EPUBs by their reading order; text and Markdown by headings.
 """
 
+import hashlib
 import json
 import logging
 import re
@@ -36,7 +37,9 @@ class Chapter:
 
     @property
     def key(self) -> str:
-        return f"{self.source_id}|{self.location}"
+        """Changes when the text does, so re-extracted sections are drafted again."""
+        digest = hashlib.sha256(self.text.encode()).hexdigest()[:12]
+        return f"{self.source_id}|{self.location}|{digest}"
 
 
 def extract_chapters(source_id: str, path: Path) -> list[Chapter]:
@@ -88,6 +91,10 @@ def _pdf_sections(path: Path) -> list[tuple[str, str]]:
             for first in range(0, len(pages), PAGES_PER_SECTION)
         ]
     sections: list[tuple[str, str]] = []
+    if starts[0][1] > 0:
+        # Papers often bookmark only figures or appendices; keep what comes before.
+        opening = starts[0][1]
+        sections.append((f"pp. 1-{opening}", "\n".join(pages[:opening])))
     for index, (title, first) in enumerate(starts):
         end = starts[index + 1][1] if index + 1 < len(starts) else len(pages)
         sections.append((title, "\n".join(pages[first:end])))
@@ -220,14 +227,27 @@ def _split_long(location: str, text: str) -> Iterator[tuple[str, str]]:
         return
     parts: list[str] = []
     current = ""
-    for paragraph in text.split("\n\n"):
-        if current and len(current) + len(paragraph) > MAX_CHAPTER_CHARS:
+    for piece in _pieces(text):
+        if current and len(current) + len(piece) + 1 > MAX_CHAPTER_CHARS:
             parts.append(current)
             current = ""
-        current = f"{current}\n\n{paragraph}" if current else paragraph
+        current = f"{current}\n{piece}" if current else piece
     parts.append(current)
     for number, part in enumerate(parts, 1):
-        yield f"{location} (part {number})", part[: MAX_CHAPTER_CHARS * 2]
+        yield f"{location} (part {number})", part
+
+
+def _pieces(text: str) -> Iterator[str]:
+    """Paragraphs, or lines when PDF text has no paragraph breaks, or fixed-size cuts of a
+    line longer still, each at most MAX_CHAPTER_CHARS long.
+    """
+    for paragraph in text.split("\n\n"):
+        if len(paragraph) <= MAX_CHAPTER_CHARS:
+            yield paragraph
+            continue
+        for line in paragraph.split("\n"):
+            for start in range(0, len(line), MAX_CHAPTER_CHARS):
+                yield line[start : start + MAX_CHAPTER_CHARS]
 
 
 def _unique_locations(chapters: list[Chapter]) -> list[Chapter]:

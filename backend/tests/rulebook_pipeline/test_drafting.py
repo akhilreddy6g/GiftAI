@@ -60,10 +60,33 @@ def test_a_second_run_only_drafts_new_sections(tmp_path: Path) -> None:
     drafted = draft_candidates(CHAPTERS, TITLES, drafter, candidates_file)
 
     # The preface drafted nothing the first time, and is still not asked again.
-    assert drafter.seen == ["gift-science|Chapter 2"]
+    assert drafter.seen == [CHAPTERS[2].key]
     assert drafted == 1
     assert len(read_candidates(candidates_file)) == 2
 
 
 def test_no_drafts_yet_reads_as_empty(tmp_path: Path) -> None:
     assert read_candidates(tmp_path / "missing.jsonl") == []
+
+
+def test_changed_renamed_or_removed_sources_are_drafted_again(tmp_path: Path) -> None:
+    candidates_file = tmp_path / "candidates.jsonl"
+    other = Chapter("other-book", "Chapter 1", "...")
+    draft_candidates(
+        [*CHAPTERS, other], TITLES | {"other-book": "Other"}, FakeDrafter(), candidates_file
+    )
+    reextracted = [CHAPTERS[0], CHAPTERS[1], Chapter("gift-science", "Chapter 2", "new text")]
+    drafter = FakeDrafter()
+
+    drafted = draft_candidates(
+        reextracted, TITLES, drafter, candidates_file, listed_sources={"gift-science"}
+    )
+
+    # Only the section whose text changed is drafted again, and the source no longer
+    # listed loses its drafts.
+    assert drafter.seen == [reextracted[2].key]
+    assert drafted == 1
+    assert [(c.source_id, c.location) for c in read_candidates(candidates_file)] == [
+        ("gift-science", "Chapter 1"),
+        ("gift-science", "Chapter 2"),
+    ]

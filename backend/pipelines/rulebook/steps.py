@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 
 from giftai.core.config import DatabaseSettings, get_database_settings
 from giftai.embeddings.base import TextEmbedder
+from pipelines.rulebook.discovery import discover_sources, render_entries
 from pipelines.rulebook.document import RULEBOOK_FILE, load_rulebook
 from pipelines.rulebook.drafting import RuleDrafter, draft_candidates, read_candidates
 from pipelines.rulebook.extraction import extract_chapters, read_chapters, write_chapters
 from pipelines.rulebook.grouping import DEFAULT_THRESHOLD, group_candidates, write_groups
 from pipelines.rulebook.seeding import SeedReport, seed_rulebook
-from pipelines.rulebook.sources import LocalSource, load_sources
+from pipelines.rulebook.sources import SOURCES_HEADER, LocalSource, load_sources
 from pipelines.rulebook.workspace import Workspace
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,32 @@ def sources(workspace: Workspace, only: list[str] | None = None) -> list[LocalSo
     return [source for source in listed if source.id in only]
 
 
+def scan(workspace: Workspace) -> int:
+    """Adds an entry to sources.yaml for every new file in the workspace, guessed from
+    the file's metadata. Returns how many were added.
+    """
+    workspace.root.mkdir(parents=True, exist_ok=True)
+    path = workspace.sources_file
+    listed = load_sources(path) if path.exists() else []
+    found = discover_sources(
+        workspace.root, {source.file for source in listed}, {source.id for source in listed}
+    )
+    if not found:
+        logger.info("No new pdf, epub, txt or md files in %s", workspace.root)
+        return 0
+    entries = render_entries(found)
+    if listed:
+        existing = path.read_text(encoding="utf-8")
+        path.write_text(existing.rstrip("\n") + "\n" + entries, encoding="utf-8")
+    else:
+        path.write_text(SOURCES_HEADER + "sources:\n" + entries, encoding="utf-8")
+    load_sources(path)  # What was written must read back.
+    for source in found:
+        logger.info("Added %s (%s): %s", source.id, source.file, source.title)
+    logger.info("Check the titles, authors, years and kinds in %s before extracting", path)
+    return len(found)
+
+
 def extract(workspace: Workspace, chosen: list[LocalSource]) -> None:
     for source in chosen:
         if not source.file.exists():
@@ -42,7 +69,12 @@ def extract(workspace: Workspace, chosen: list[LocalSource]) -> None:
         logger.info("%s: %d sections, %d characters", source.id, len(chapters), characters)
 
 
-def draft(workspace: Workspace, chosen: list[LocalSource], drafter: RuleDrafter) -> None:
+def draft(
+    workspace: Workspace,
+    chosen: list[LocalSource],
+    drafter: RuleDrafter,
+    listed_sources: set[str] | None = None,
+) -> None:
     chapters = [
         chapter
         for source in chosen
@@ -51,7 +83,7 @@ def draft(workspace: Workspace, chosen: list[LocalSource], drafter: RuleDrafter)
         )
     ]
     titles = {source.id: source.title for source in chosen}
-    drafted = draft_candidates(chapters, titles, drafter, workspace.candidates_file)
+    drafted = draft_candidates(chapters, titles, drafter, workspace.candidates_file, listed_sources)
     logger.info("Drafted %d new sections; %d were already done", drafted, len(chapters) - drafted)
 
 

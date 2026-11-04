@@ -7,6 +7,11 @@ from pydantic import BaseModel, ConfigDict
 
 from pipelines.rulebook.document import SourceEntry
 
+SOURCES_HEADER = """\
+# Your books and papers for the rulebook. This file and the files it lists stay on your
+# machine: git ignores backend/data/. `python -m pipelines.rulebook scan` adds new files.
+"""
+
 EXAMPLE = """\
 sources:
   - id: galak-givi-williams-2016          # lowercase slug, cited by rules
@@ -33,7 +38,8 @@ class SourceList(BaseModel):
 def load_sources(path: Path) -> list[LocalSource]:
     if not path.exists():
         raise FileNotFoundError(
-            f"{path} is missing. Create it to list your books and papers, like this:\n\n{EXAMPLE}"
+            f"{path} is missing. Put your books and papers in {path.parent} and run the "
+            f"'scan' step to create it, or write it yourself like this:\n\n{EXAMPLE}"
         )
     data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     sources = SourceList.model_validate(data).sources

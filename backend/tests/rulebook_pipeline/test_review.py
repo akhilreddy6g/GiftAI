@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from giftai.rulebook.models import RuleKind, SourceKind
 from pipelines.rulebook.document import load_rulebook
 from pipelines.rulebook.drafting import Candidate
@@ -124,3 +126,11 @@ def test_an_invalid_edit_is_not_saved(tmp_path: Path) -> None:
     assert load_rulebook(tmp_path / "rulebook.yaml").rules == []
     assert review.state.decisions == {}
     assert any(line.startswith("Not saved:") for line in output)
+
+
+def test_drafts_of_unlisted_sources_stop_the_review_early(tmp_path: Path) -> None:
+    rulebook = write_rulebook(tmp_path / "rulebook.yaml", {"sources": [], "rules": []})
+    groups = group_candidates(DRAFTS, HashingTextEmbedder())
+
+    with pytest.raises(ValueError, match="registry-study"):
+        Review(DRAFTS, groups, SOURCES[:1], rulebook, tmp_path / "review.json")
