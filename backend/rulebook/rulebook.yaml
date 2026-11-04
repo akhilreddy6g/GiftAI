@@ -37,35 +37,6 @@ sources:
   year: 2017
   kind: paper
 rules:
-- id: R-001
-  rule: Avoid buying gifts that feel strictly like corporate work for hire or generic mass-market formulas.
-  rationale: Commercial art created merely to meet market demand lacks the genuine insight and spirit
-    of a true gift.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Dedication; Chapter 14: Retention and Loyalty'
-  - source: hyde-the-gift-1983
-    location: Conclusion
-- id: R-002
-  rule: Avoid gifts that rely on abstract concepts rather than concrete imagery.
-  rationale: Abstract ideas dull the emotional impact and disconnect the recipient from the true sentiment
-    of the present.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Part I: The Power of Giving; Chapter 11: The Referral Factory'
-  - source: hyde-the-gift-1983
-    location: '• Usury: A History of Gift Exchange (part 2); • A Draft of Whitman (part 1); • Ezra Pound
-      and the...'
 - id: R-003
   rule: Ensure that any gift you give to a close relative is presented unconditionally without leveraging
     it for payback or control.
@@ -234,7 +205,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   - friend
   occasions: []
   budget_min_usd: null
@@ -250,22 +220,6 @@ rules:
   kind: do
   relationships: []
   occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: Dedication
-- id: R-016
-  rule: Send tokens of appreciation immediately following initial meetings or coffee catch-ups.
-  rationale: Quick follow-up transforms a casual meeting into a memorable event and shows high regard
-    for the other person's time.
-  kind: do
-  relationships:
-  - client
-  - friend
-  - other
-  occasions:
-  - thank_you
   budget_min_usd: null
   budget_max_usd: null
   sources:
@@ -290,7 +244,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -314,20 +267,6 @@ rules:
     the physical item itself.
   kind: do
   relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Part I: The Power of Giving'
-- id: R-021
-  rule: Scale the value of your gift to match extraordinary business outcomes.
-  rationale: If someone generates massive value for you, a token gift is insufficient and fails to properly
-    recognize their contribution.
-  kind: do
-  relationships:
-  - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -384,59 +323,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 2: Creating a First-Class Experience'
-- id: R-026
-  rule: Provide gifts with zero expectations of receiving anything in return.
-  rationale: True generosity means giving freely without attaching conditions or demanding immediate reciprocation.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 4: Give and Take'
-- id: R-027
-  rule: Avoid spending time and resources on individuals who constantly drain your energy without appreciation.
-  rationale: Protect your boundaries from chronic takers who exploit your kindness and never return a
-    good deed.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 4: Give and Take'
-- id: R-028
-  rule: Avoid giving holiday gifts during traditional festive seasons like Christmas to prevent predictable
-    expectations.
-  rationale: Giving gifts when everyone else does makes them feel obligatory rather than impactful.
-  kind: dont
-  relationships:
-  - client
-  - coworker
-  - partner
-  occasions:
-  - holiday
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 5: Surprise and Delight'
-- id: R-029
-  rule: Schedule gifts for unconventional times of the year such as February or Memorial Day.
-  rationale: Unannounced timing completely removes a sense of entitlement from the recipient.
-  kind: do
-  relationships:
-  - client
-  - coworker
-  - partner
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 5: Surprise and Delight'
 - id: R-030
   rule: Avoid sending standard chocolates during major winter holidays.
   rationale: Recipients are already overwhelmed with sweets from multiple sources during this season.
@@ -444,7 +330,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   occasions:
   - holiday
   budget_min_usd: null
@@ -459,7 +344,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -474,7 +358,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -487,7 +370,6 @@ rules:
   kind: dont
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -533,20 +415,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 7: Igniting the Spark'
-- id: R-037
-  rule: Allocate approximately five percent of a key relationship's generated profit back into their gift
-    budget.
-  rationale: Reinvesting a proportional percentage helps cement high-value business relationships and
-    ensures long-term client retention.
-  kind: do
-  relationships:
-  - client
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 7: Igniting the Spark'
 - id: R-038
   rule: Avoid cheap, disposable promotional items that recipients will discard or never use.
   rationale: Low-quality branded items fail to create a positive emotional connection and are typically
@@ -556,7 +424,7 @@ rules:
   - client
   occasions: []
   budget_min_usd: null
-  budget_max_usd: 5
+  budget_max_usd: null
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 7: Igniting the Spark'
@@ -604,19 +472,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 9: Don’t Get Lost in the Shuffle'
-- id: R-042
-  rule: Concentrate your gift budget on a select few individuals rather than spreading funds thinly across
-    a large group.
-  rationale: Limiting your list allows you to afford more creative and memorable items for the people
-    who matter most.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 11: The Referral Factory'
 - id: R-043
   rule: Write a thoughtful message on premium stationery instead of purchasing an inexpensive trinket.
   rationale: A quality handwritten note creates a stronger impression than a low-cost, mediocre item.
@@ -628,19 +483,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 11: The Referral Factory'
-- id: R-044
-  rule: Send high-end, premium gifts to prospective clients before your initial meeting.
-  rationale: Investing upfront demonstrates extraordinary appreciation and reassures busy executives that
-    you are worth their time.
-  kind: do
-  relationships:
-  - client
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 12: Getting Their Attention'
 - id: R-045
   rule: Avoid sending cheap promotional items like stress balls or koozies to high-level executives.
   rationale: Busy leaders have seen countless standard pitches and promotional trinkets, meaning low-effort
@@ -707,46 +549,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 14: Retention and Loyalty'
-- id: R-050
-  rule: Select high-value gestures for key suppliers to strengthen business partnerships.
-  rationale: Treating essential suppliers exceptionally well ensures they will go above and beyond for
-    you in emergencies.
-  kind: do
-  relationships:
-  - partner
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 14: Retention and Loyalty'
-- id: R-051
-  rule: Send gifts to suppliers to encourage retention, loyalty, and a strong return on investment.
-  rationale: Showing appreciation to suppliers helps secure business stability and produces massive financial
-    savings over time.
-  kind: do
-  relationships:
-  - other
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Part II: The Relationship Road Map'
-- id: R-052
-  rule: Send thoughtful gifts to emerging talents and rising stars before they reach the peak of their
-    success.
-  rationale: Recognizing potential early helps cultivate future industry leaders into lifelong advocates
-    for your business.
-  kind: do
-  relationships:
-  - other
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Part II: The Relationship Road Map'
 - id: R-053
   rule: Send gifts that benefit an executive's family rather than taking the executive away from them.
   rationale: Executives already spend too much time away from their loved ones, so family-oriented gifts
@@ -754,7 +556,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -769,7 +570,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -797,7 +597,6 @@ rules:
   kind: dont
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -811,7 +610,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -826,7 +624,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -864,7 +661,6 @@ rules:
   kind: do
   relationships:
   - client
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -891,7 +687,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   occasions: []
   budget_min_usd: null
   budget_max_usd: null
@@ -905,7 +700,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   - other
   occasions: []
   budget_min_usd: null
@@ -921,7 +715,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   - other
   occasions: []
   budget_min_usd: null
@@ -936,7 +729,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   - other
   occasions: []
   budget_min_usd: null
@@ -952,7 +744,6 @@ rules:
   relationships:
   - client
   - coworker
-  - partner
   - other
   occasions: []
   budget_min_usd: null
@@ -1044,70 +835,6 @@ rules:
   sources:
   - source: ruhlin-giftology-2016
     location: 'Chapter 27: What Would They Really Want?'
-- id: R-075
-  rule: Split exceptionally expensive presents into smaller, incremental deliveries over time.
-  rationale: Delivering high-value items in stages prevents the recipient from feeling uncomfortable or
-    obligated to reciprocate.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 27: What Would They Really Want?'
-- id: R-076
-  rule: Deliver a series of three gifts over three weeks to prospects right after a major event.
-  rationale: This maintains momentum, keeps your conversation fresh in their minds, and preserves the
-    connection.
-  kind: do
-  relationships:
-  - client
-  - other
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 29: When Would It Have the Most Impact?'
-- id: R-077
-  rule: Send a gift to prospective clients specifically when a deal falls through.
-  rationale: This unexpected gesture keeps communication channels open and demonstrates your professionalism.
-  kind: do
-  relationships:
-  - client
-  - other
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 29: When Would It Have the Most Impact?'
-- id: R-078
-  rule: Commit to a multi-year timeframe for your gifting strategy rather than expecting immediate loyalty.
-  rationale: Gifting is a slow build that develops over time, and people need to see genuine intentions
-    without immediate demands for business.
-  kind: do
-  relationships:
-  - client
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 30: How Much to Give?'
-- id: R-079
-  rule: Rely solely on handwritten notes if you do not yet have a financial budget set aside for gifting.
-  rationale: Handwritten notes serve as a meaningful alternative when monetary investment in gifts is
-    not yet possible.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: 0
-  sources:
-  - source: ruhlin-giftology-2016
-    location: 'Chapter 30: How Much to Give?'
 - id: R-080
   rule: Send unexpected gifts to loved ones outside of traditional calendar events.
   rationale: Expressing appreciation spontaneously rather than solely on birthdays or anniversaries builds
@@ -1120,22 +847,6 @@ rules:
   - friend
   occasions:
   - just_because
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: ruhlin-giftology-2016
-    location: Conclusion
-- id: R-081
-  rule: Select recipients by identifying individuals who have significantly contributed to your success.
-  rationale: Reflecting daily on those who helped you professionally or personally ensures your gifts
-    honor the people who truly matter.
-  kind: do
-  relationships:
-  - client
-  - coworker
-  - manager
-  - other
-  occasions: []
   budget_min_usd: null
   budget_max_usd: null
   sources:
@@ -1190,33 +901,6 @@ rules:
   sources:
   - source: chapman-five-love-languages-1992
     location: 'Chapter 2 - Love Language #1: Words of Affirmation'
-- id: R-086
-  rule: Participate in an activity that your partner deeply enjoys, even if it brings you minimal personal
-    pleasure.
-  rationale: Willingness to join in their favorite pursuits demonstrates genuine love and a positive attitude
-    toward togetherness.
-  kind: do
-  relationships:
-  - partner
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: chapman-five-love-languages-1992
-    location: 'Chapter 3 - Love Language #2: Quality Time'
-- id: R-087
-  rule: Prioritize physical presence over purchased items during major life crises and milestones.
-  rationale: Being physically supportive during critical moments communicates love far more effectively
-    than any material object.
-  kind: do
-  relationships:
-  - partner
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: chapman-five-love-languages-1992
-    location: 'Chapter 4 - Love Language #3: Receiving Gifts'
 - id: R-088
   rule: Select items that match your financial reality rather than trying to overspend.
   rationale: The monetary value matters little compared to the sincerity behind the gesture, provided
@@ -1283,66 +967,6 @@ rules:
   sources:
   - source: hyde-the-gift-1983
     location: • Some Food We Could Not Eat
-- id: R-093
-  rule: Avoid making explicit demands or bargaining for an equal return when you give.
-  rationale: True gift exchange lacks the calculated contracts and price matching of a market transaction.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • Some Food We Could Not Eat
-- id: R-094
-  rule: Direct your generosity toward those who are most in need or empty-handed.
-  rationale: Gifts naturally flow away from plenty toward scarcity, seeking out the barren or the poor
-    to replenish them.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • Some Food We Could Not Eat
-- id: R-095
-  rule: Do not buy rare collectibles or packaged items encased in plastic as gifts.
-  rationale: Air-tight packaging and commercial collections turn living tokens into dead commodities devoid
-    of personal connection.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • Some Food We Could Not Eat
-- id: R-096
-  rule: Contribute generosity and goodwill that matches or exceeds what is received in a gift exchange.
-  rationale: Adding social feeling and liberality to an exchange ensures the gift grows in worth through
-    community connection.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • The Bones of the Dead
-- id: R-097
-  rule: Do give transformative or teaching gifts freely without requiring a direct upfront fee whenever
-    possible.
-  rationale: Charging fixed fees or selling life-changing insights through the market obscures the voluntary
-    spirit and cuts off the motivating force of gratitude.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • The Labor of Gratitude
 - id: R-098
   rule: Do choose gifts that act as catalysts or guardians to help someone successfully navigate a major
     life change.
@@ -1356,50 +980,6 @@ rules:
   sources:
   - source: hyde-the-gift-1983
     location: • The Labor of Gratitude
-- id: R-099
-  rule: Do not give gift exchanges to someone when you actively want to sever ties or maintain emotional
-    distance from them.
-  rationale: Gifts create social and feeling bonds that reinforce attachment, making them counterproductive
-    when you are trying to pull away.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • The Bond
-- id: R-100
-  rule: Do not charge interest when lending to friends or family.
-  rationale: Loans given without interest within a close group reinforce personal bonds, whereas charging
-    interest creates psychological separation and turns generosity into a market transaction.
-  kind: dont
-  relationships:
-  - partner
-  - parent
-  - child
-  - sibling
-  - grandparent
-  - relative
-  - friend
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: '• Usury: A History of Gift Exchange (part 1)'
-- id: R-101
-  rule: Freely give short-term items that are easily spared without expecting anything back.
-  rationale: Lending minor surplus items that can be easily spared without seeking a return fosters genuine
-    goodwill and maintains the spirit of selfless sharing.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: '• Usury: A History of Gift Exchange (part 1)'
 - id: R-102
   rule: Select presents that awaken the recipient's imagination and inspire them to create or express
     themselves.
@@ -1429,19 +1009,6 @@ rules:
   rationale: Physical objects crafted with care carry genuine emotional and spiritual resonance that mass-produced
     commodities lack.
   kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • Ezra Pound and the Fate of Vegetable Money (part 1)
-- id: R-105
-  rule: Refuse to give items that exploit commercialized characters or marketing gimmicks designed to
-    manipulate affection.
-  rationale: Using branded characters or counterfeit emotional triggers turns a sincere gift into a tool
-    for corporate profit.
-  kind: dont
   relationships: []
   occasions: []
   budget_min_usd: null
@@ -1485,27 +1052,3 @@ rules:
   sources:
   - source: hyde-the-gift-1983
     location: • Ezra Pound and the Fate of Vegetable Money (part 2)
-- id: R-109
-  rule: Offer gifts that serve as practical stepping stones to clarify the recipient's perspective.
-  rationale: Effective offerings provide grounded, useful support that helps the recipient build or refine
-    their own path forward.
-  kind: do
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: • Ezra Pound and the Fate of Vegetable Money (part 3)
-- id: R-110
-  rule: Do not give mass-produced reproductions or commercialized copies of artistic creations.
-  rationale: The author notes that selling signed gold-flecked reproductions or mass-marketed art cheapens
-    the integrity of the original gift.
-  kind: dont
-  relationships: []
-  occasions: []
-  budget_min_usd: null
-  budget_max_usd: null
-  sources:
-  - source: hyde-the-gift-1983
-    location: Conclusion
