@@ -124,7 +124,12 @@ class GeminiDrafter:
             except errors.APIError as error:
                 retryable = error.code == 429 or error.code >= 500
                 if not retryable or attempt == 5:
-                    raise RuntimeError(f"Gemini request failed: {error}") from error
+                    hint = (
+                        f" {self._model} looks overloaded; try another model with --model."
+                        if error.code >= 500
+                        else ""
+                    )
+                    raise RuntimeError(f"Gemini request failed: {error}.{hint}") from error
                 delay = min(30.0 * 2**attempt, 300.0)
                 logger.warning("Gemini returned %s; retrying in %.0fs", error.code, delay)
                 self._sleep(delay)
