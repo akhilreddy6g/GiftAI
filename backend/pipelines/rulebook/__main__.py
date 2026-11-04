@@ -89,7 +89,7 @@ def run(args: argparse.Namespace) -> None:
         review = Review(
             read_candidates(workspace.require(workspace.candidates_file, "draft")),
             read_groups(workspace.require(workspace.groups_file, "group")),
-            chosen,
+            steps.sources(workspace),
             args.rulebook,
             workspace.review_file,
         )

@@ -50,6 +50,14 @@ class Review:
         rulebook_file: Path,
         state_file: Path,
     ) -> None:
+        listed = {source.id for source in sources}
+        unknown = sorted({c.source_id for c in candidates if c.source_id not in listed})
+        if unknown:
+            raise ValueError(
+                f"The drafts cite sources missing from sources.yaml: {', '.join(unknown)}. "
+                "Run the 'draft' step again (it drops drafts of removed or renamed sources), "
+                "then 'group', then 'review'."
+            )
         self._candidates = {candidate.id: candidate for candidate in candidates}
         self._groups = groups
         self._sources = {source.id: source for source in sources}
