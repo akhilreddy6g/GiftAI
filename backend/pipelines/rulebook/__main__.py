@@ -81,7 +81,8 @@ def run(args: argparse.Namespace) -> None:
     if args.step == "extract":
         steps.extract(workspace, chosen)
     elif args.step == "draft":
-        steps.draft(workspace, chosen, _gemini(args))
+        listed = {source.id for source in steps.sources(workspace)}
+        steps.draft(workspace, chosen, _gemini(args), listed)
     elif args.step == "group":
         steps.group(workspace, build_text_embedder(get_embedding_settings()), args.threshold)
     elif args.step == "review":

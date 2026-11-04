@@ -69,7 +69,12 @@ def extract(workspace: Workspace, chosen: list[LocalSource]) -> None:
         logger.info("%s: %d sections, %d characters", source.id, len(chapters), characters)
 
 
-def draft(workspace: Workspace, chosen: list[LocalSource], drafter: RuleDrafter) -> None:
+def draft(
+    workspace: Workspace,
+    chosen: list[LocalSource],
+    drafter: RuleDrafter,
+    listed_sources: set[str] | None = None,
+) -> None:
     chapters = [
         chapter
         for source in chosen
@@ -78,7 +83,7 @@ def draft(workspace: Workspace, chosen: list[LocalSource], drafter: RuleDrafter)
         )
     ]
     titles = {source.id: source.title for source in chosen}
-    drafted = draft_candidates(chapters, titles, drafter, workspace.candidates_file)
+    drafted = draft_candidates(chapters, titles, drafter, workspace.candidates_file, listed_sources)
     logger.info("Drafted %d new sections; %d were already done", drafted, len(chapters) - drafted)
 
 

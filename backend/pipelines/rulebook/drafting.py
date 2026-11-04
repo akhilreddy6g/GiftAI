@@ -154,10 +154,16 @@ def draft_candidates(
     titles: dict[str, str],
     drafter: RuleDrafter,
     candidates_file: Path,
+    listed_sources: set[str] | None = None,
 ) -> int:
     """Drafts every chapter not drafted yet, appending as it goes so that an interrupted
     run (or a rate limit) loses at most one chapter. Returns the chapters drafted now.
+
+    Drafts of sections that no longer exist (the source was re-extracted, renamed or
+    removed from ``listed_sources``) are dropped first.
     """
+    chapters = list(chapters)
+    _drop_stale(candidates_file, chapters, listed_sources)
     done = drafted_chapter_keys(candidates_file)
     candidates_file.parent.mkdir(parents=True, exist_ok=True)
     drafted = 0
@@ -181,6 +187,28 @@ def draft_candidates(
             len(pending),
         )
     return drafted
+
+
+def _drop_stale(
+    candidates_file: Path, chapters: list[Chapter], listed_sources: set[str] | None
+) -> None:
+    records = _records(candidates_file)
+    current = {chapter.key for chapter in chapters}
+    redrafted = {chapter.source_id for chapter in chapters}
+
+    def keep(record: dict[str, Any]) -> bool:
+        source_id = str(record["chapter"]).split("|", 1)[0]
+        if listed_sources is not None and source_id not in listed_sources:
+            return False
+        return source_id not in redrafted or record["chapter"] in current
+
+    kept = [record for record in records if keep(record)]
+    if len(kept) == len(records):
+        return
+    logger.info("Dropping the drafts of %d sections that changed", len(records) - len(kept))
+    with candidates_file.open("w", encoding="utf-8") as file:
+        for record in kept:
+            file.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def drafted_chapter_keys(candidates_file: Path) -> set[str]:

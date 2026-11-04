@@ -97,3 +97,37 @@ def test_chapters_survive_writing_and_reading(tmp_path: Path) -> None:
     write_chapters(tmp_path / "out" / "notes.jsonl", chapters)
 
     assert read_chapters(tmp_path / "out" / "notes.jsonl") == chapters
+
+
+def test_long_text_without_paragraph_breaks_is_split_not_cut(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(extraction, "MAX_CHAPTER_CHARS", 5_000)
+    path = tmp_path / "pdf-like.md"
+    # PDF text often has line breaks but no blank lines between paragraphs.
+    body = "\n".join([PARAGRAPH[:900]] * 20)
+    path.write_text("# Long\n" + body)
+
+    chapters = extract_chapters("pdf-like", path)
+
+    assert len(chapters) == 4
+    assert all(len(chapter.text) <= 5_000 for chapter in chapters)
+    assert sum(len(chapter.text) for chapter in chapters) >= len(body.strip()) - 20
+
+
+def test_pdf_pages_before_the_first_bookmark_are_kept(tmp_path: Path) -> None:
+    from pypdf import PdfWriter
+
+    writer = PdfWriter()
+    for _ in range(8):
+        writer.add_blank_page(width=612, height=792)
+    # Like a paper that bookmarks only a table and an appendix.
+    writer.add_outline_item("ucw067-TF1", 3)
+    writer.add_outline_item("app1", 6)
+    path = tmp_path / "paper.pdf"
+    with path.open("wb") as file:
+        writer.write(file)
+
+    sections = extraction._pdf_sections(path)
+
+    assert [location for location, _ in sections] == ["pp. 1-3", "ucw067-TF1", "app1"]
