@@ -1,0 +1,8 @@
+# The GiftAI gifting rulebook: our own rules, drafted from the sources below and approved
+# by a person. Only citations of the sources live here, never their text.
+#
+# Edit it with `python -m pipelines.rulebook review`, then load it into the database
+# with `python -m pipelines.rulebook seed`. Rules removed from this file are retired
+# in the database (kept for old citations), never deleted.
+sources: []
+rules: []

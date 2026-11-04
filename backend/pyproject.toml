@@ -25,10 +25,14 @@ dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",
     "ruff>=0.8",
+    "types-pyyaml>=6.0",
 ]
 # Offline catalog pipeline (run on a laptop, never deployed): ALS training needs these.
 offline = [
+    "google-genai>=1.0",
     "implicit>=0.7",
+    "pypdf>=5.0",
+    "pyyaml>=6.0",
     "scipy>=1.14",
 ]
 
