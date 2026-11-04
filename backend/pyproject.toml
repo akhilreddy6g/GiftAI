@@ -8,7 +8,9 @@ dependencies = [
     "alembic>=1.14",
     "fastapi>=0.115",
     "fastembed>=0.5",
+    "google-genai>=1.0",
     "httpx>=0.28",
+    "langgraph>=0.3",
     "numpy>=2.1",
     "pgvector>=0.3",
     "psycopg[binary,pool]>=3.2",
@@ -29,7 +31,6 @@ dev = [
 ]
 # Offline catalog pipeline (run on a laptop, never deployed): ALS training needs these.
 offline = [
-    "google-genai>=1.0",
     "implicit>=0.7",
     "pypdf>=5.0",
     "pyyaml>=6.0",

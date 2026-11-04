@@ -14,7 +14,10 @@ src/giftai/
   users/       accounts (GET/DELETE /api/v1/me)
   recipients/  people a user shops for (/api/v1/recipients)
   chats/       chats and their messages (/api/v1/chats)
+  agent/       the gift assistant: LangGraph turn, candidates, ranking, picks
+  llm/         the LLM interface: Gemini first, Groq as fallback
   catalog/     products, meaning search and "also liked" (/api/v1/products)
+  rulebook/    the gifting rulebook (/api/v1/rules)
   embeddings/  the text-embedding interface and its bge-small implementation
   health/      liveness and readiness endpoints
   gifting.py   shared vocabulary: relationships and occasions
@@ -22,8 +25,9 @@ src/giftai/
   main.py      application factory
 migrations/    Alembic migrations (the only way the schema changes)
 scripts/       operational scripts: verify a database, get an access token
-pipelines/     offline jobs run on a laptop, never deployed (catalog/: the product catalog)
-tests/         unit/ and catalog_pipeline/ (no database), api/ (against a real Postgres)
+pipelines/     offline jobs run on a laptop, never deployed (catalog/, rulebook/)
+rulebook/      the approved gifting rules, loaded by `pipelines.rulebook seed`
+tests/         unit/, catalog_pipeline/, rulebook_pipeline/ (no database), api/ (real Postgres)
 ```
 
 Each feature package has the same shape:
@@ -49,6 +53,37 @@ Each feature package has the same shape:
 - **Ownership:** another user's resource answers 404, never 403, so ids don't leak.
 - **Abuse protection:** 60 requests per minute per user (429 with `Retry-After`), 64 KB
   request bodies (413), length caps on every text field, and per-account storage caps.
+
+## The gift assistant
+
+`POST /api/v1/chats/{id}/messages` runs one turn of the assistant and returns the user's
+message, the reply, any gift picks, an `add_all_to_cart_url`, the `order_by` date and the
+chat as the assistant left it (it fills in occasion, date and budget as it learns them,
+and retitles the chat unless the user named it).
+
+Each turn is a small LangGraph graph (`agent/graph.py`):
+
+1. **Understand.** The LLM reads the conversation and updates the recipient profile:
+   relationship, occasion, date, budget, interests, personality, things to avoid. The
+   chat's own fields and the saved person, if any, are folded in first.
+2. **Ask or suggest.** While key details are missing it asks one question, at most 4 in
+   all; it suggests sooner if the user asks for ideas.
+3. **Candidates.** Meaning search for each of the LLM's product queries, plus the "also
+   liked" neighbors of the best hits, within about the budget: up to a few hundred products.
+4. **Rank.** A hand-set score (relevance, fit to budget, rating, review count; products
+   already shown drop back) keeps the best 20, at most 3 of a kind.
+5. **Pick and explain.** The LLM chooses 5 or 6 from those 20 with the gifting rules that
+   apply, says why each suits the person and which rules it follows. Products and rule
+   ids are checked against what was offered; anything else is dropped.
+
+`GET /api/v1/chats/{id}/recommendations` returns the latest picks again. A turn's message
+and reply are saved together only when the assistant has answered, so if both LLMs are
+busy (503) nothing is half-saved and the user just sends again.
+
+Set `GEMINI_API_KEY` (and optionally `GROQ_API_KEY` as the fallback) in `backend/.env`, or
+in the repo-root `.env` for Docker Compose. Without either, chats work but the assistant
+replies that it is switched off. Each user gets `AGENT_TURNS_PER_USER_PER_DAY` replies a day
+(default 40), since the free LLM quotas are shared by everyone.
 
 ## Products
 

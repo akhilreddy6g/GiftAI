@@ -91,11 +91,15 @@ async def test_messages_are_stored_and_bump_the_chat(
         headers=alice,
     )
     assert sent.status_code == 201
-    assert sent.json()["role"] == "user"
-    assert sent.json()["content"] == "Ideas for my mom?"
+    turn = sent.json()
+    assert (turn["message"]["role"], turn["message"]["content"]) == ("user", "Ideas for my mom?")
+    # No LLM is configured in tests, so the assistant says it is switched off.
+    assert turn["reply"]["role"] == "assistant"
+    assert "switched off" in turn["reply"]["content"]
+    assert turn["recommendations"] == []
 
     messages = await database_client.get(f"/api/v1/chats/{older['id']}/messages", headers=alice)
-    assert [m["content"] for m in messages.json()["items"]] == ["Ideas for my mom?"]
+    assert [m["role"] for m in messages.json()["items"]] == ["assistant", "user"]
 
     chats = await database_client.get("/api/v1/chats", headers=alice)
     assert chats.json()["items"][0]["id"] == older["id"]

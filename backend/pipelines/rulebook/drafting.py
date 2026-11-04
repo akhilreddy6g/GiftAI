@@ -21,8 +21,8 @@ from pipelines.rulebook.extraction import Chapter
 
 logger = logging.getLogger(__name__)
 
-# Google keeps this alias on its current Flash model; pass --model to pin one.
-DEFAULT_MODEL = "gemini-flash-latest"
+# A light Flash model is plenty for drafting and is the least busy on the free tier.
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 MAX_RULES_PER_CHAPTER = 8
 
 

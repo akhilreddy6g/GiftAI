@@ -1,8 +1,10 @@
 import uuid
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from giftai.db.base import Base, Timestamps, UuidPrimaryKey
@@ -35,6 +37,11 @@ class Chat(UuidPrimaryKey, Timestamps, Base):
     occasion_date: Mapped[date | None] = mapped_column(Date)
     budget_min_usd: Mapped[int | None]
     budget_max_usd: Mapped[int | None]
+    # The agent's notes on the recipient (interests, personality, things to avoid), as a
+    # GiftProfile. Occasion, date and budget live in the columns above.
+    agent_profile: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
+    # Questions the agent has asked so far; it suggests gifts by MAX_QUESTIONS at the latest.
+    agent_questions_asked: Mapped[int] = mapped_column(default=0, server_default="0")
 
 
 class MessageRole(StrEnum):
@@ -43,7 +50,7 @@ class MessageRole(StrEnum):
 
 
 class Message(UuidPrimaryKey, Base):
-    """One turn of a chat, kept for display; the agent keeps its own working state."""
+    """One turn of a chat. The agent reads the conversation back from here each turn."""
 
     __tablename__ = "messages"
     __table_args__ = (Index("ix_messages_chat_id_created_at", "chat_id", "created_at"),)

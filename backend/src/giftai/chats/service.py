@@ -2,9 +2,9 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from giftai.chats.models import Chat, Message, MessageRole
+from giftai.chats.models import Chat, Message
 from giftai.chats.repository import ChatRepository, MessageRepository
-from giftai.chats.schemas import ChatCreate, ChatUpdate, MessageCreate
+from giftai.chats.schemas import ChatCreate, ChatUpdate
 from giftai.chats.titles import describe_chat
 from giftai.core.errors import InvalidRequestError, LimitReachedError, NotFoundError
 from giftai.core.pagination import PageRequest, PageResult
@@ -88,21 +88,6 @@ class ChatService:
     ) -> PageResult[Message]:
         chat = await self.get(user, chat_id)
         return await self._messages.list_for_chat(chat.id, page)
-
-    async def add_user_message(
-        self, user: User, chat_id: uuid.UUID, data: MessageCreate
-    ) -> Message:
-        """Store the user's message. The agent's reply is added by the agent milestone."""
-        chat = await self.get(user, chat_id)
-        if await self._messages.count_for_chat(chat.id) >= MAX_MESSAGES_PER_CHAT:
-            raise LimitReachedError("This chat is full. Start a new chat to keep going.")
-
-        message = Message(chat_id=chat.id, role=MessageRole.USER, content=data.content)
-        self._messages.add(message)
-        await self._chats.mark_active(chat.id)
-        await self._session.commit()
-        await self._session.refresh(message)
-        return message
 
     async def _owned_recipient(
         self, user: User, recipient_id: uuid.UUID | None
