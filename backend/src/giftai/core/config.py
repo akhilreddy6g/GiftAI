@@ -3,12 +3,14 @@
 Every setting is declared here with its type, so a missing or malformed value fails fast
 at startup with a clear message instead of deep inside a request.
 
-``DatabaseSettings`` holds only what database tooling needs, so migrations and scripts
-run without the web app's configuration. ``Settings`` adds everything the API needs.
+``DatabaseSettings`` and ``EmbeddingSettings`` hold only what migrations and the offline
+catalog pipeline need, so they run without the web app's configuration. ``Settings`` adds
+everything the API needs.
 """
 
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import Field, HttpUrl, PostgresDsn, SecretStr, field_validator
@@ -57,7 +59,18 @@ class DatabaseSettings(BaseSettings):
         return url
 
 
-class Settings(DatabaseSettings):
+class EmbeddingSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    # The catalog and every search query must be embedded by this same model; changing it
+    # means re-running the catalog pipeline.
+    embedding_model_name: str = "BAAI/bge-small-en-v1.5"
+    # Where the model files are cached. The Docker image bakes them in, so production
+    # never downloads at runtime; unset means fastembed's default cache folder.
+    embedding_cache_dir: Path | None = None
+
+
+class Settings(DatabaseSettings, EmbeddingSettings):
     environment: Environment = Environment.DEVELOPMENT
     log_level: str = "INFO"
     log_format: LogFormat = LogFormat.TEXT
@@ -100,6 +113,12 @@ class Settings(DatabaseSettings):
 def get_database_settings() -> DatabaseSettings:
     """Database settings alone, for migrations and scripts."""
     return DatabaseSettings()
+
+
+@lru_cache
+def get_embedding_settings() -> EmbeddingSettings:
+    """Embedding settings alone, for the offline catalog pipeline."""
+    return EmbeddingSettings()
 
 
 @lru_cache

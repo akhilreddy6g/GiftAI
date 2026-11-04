@@ -15,11 +15,16 @@ WORKDIR /app
 # Dependencies first, so this layer is cached until the lockfile changes.
 COPY pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --frozen --no-default-groups --no-install-project
 
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-editable
+    uv sync --frozen --no-default-groups --no-editable
+
+# Bake the search embedding model into the image, so the server never downloads at runtime.
+ARG EMBEDDING_MODEL_NAME=BAAI/bge-small-en-v1.5
+RUN /app/.venv/bin/python -c "import sys; from fastembed import TextEmbedding; \
+TextEmbedding(sys.argv[1], cache_dir='/app/models')" "$EMBEDDING_MODEL_NAME"
 
 # ---- Runtime: only the virtualenv, migrations and scripts, run as a non-root user --------
 FROM python:3.13-slim AS runtime
@@ -27,12 +32,14 @@ FROM python:3.13-slim AS runtime
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    EMBEDDING_CACHE_DIR=/app/models \
     PORT=8000
 
 RUN groupadd --system giftai && useradd --system --gid giftai --no-create-home giftai
 
 WORKDIR /app
 COPY --from=build --chown=giftai:giftai /app/.venv ./.venv
+COPY --from=build --chown=giftai:giftai /app/models ./models
 COPY --chown=giftai:giftai alembic.ini ./
 COPY --chown=giftai:giftai migrations ./migrations
 COPY --chown=giftai:giftai scripts ./scripts

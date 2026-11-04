@@ -15,6 +15,7 @@ from giftai.core.middleware import BodySizeLimitMiddleware, RequestIdMiddleware
 from giftai.core.rate_limit import FixedWindowRateLimiter
 from giftai.core.request_context import REQUEST_ID_HEADER
 from giftai.db.session import Database
+from giftai.embeddings.dependencies import build_text_embedder
 from giftai.health.router import router as health_router
 
 
@@ -29,6 +30,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.rate_limiter = FixedWindowRateLimiter(
             limit=settings.rate_limit_requests_per_minute, window_seconds=60
         )
+        # Loads its model on the first search, so startup stays fast and light.
+        app.state.text_embedder = build_text_embedder(settings)
         try:
             yield
         finally:

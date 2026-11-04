@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request
 
 from giftai.auth.dependencies import get_principal
 from giftai.auth.tokens import AuthenticatedPrincipal
+from giftai.catalog.router import router as catalog_router
 from giftai.chats.router import router as chats_router
 from giftai.core.errors import RateLimitedError
 from giftai.core.rate_limit import RateLimiter
@@ -34,3 +35,4 @@ api_router = APIRouter(prefix=API_V1_PREFIX, dependencies=[Depends(enforce_rate_
 api_router.include_router(users_router)
 api_router.include_router(recipients_router)
 api_router.include_router(chats_router)
+api_router.include_router(catalog_router)
