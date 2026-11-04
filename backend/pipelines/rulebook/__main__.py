@@ -1,5 +1,6 @@
 """Command line for the rulebook pipeline. Run from backend/:
 
+    uv run python -m pipelines.rulebook scan      # files in data/rulebook -> sources.yaml entries
     uv run python -m pipelines.rulebook extract   # sources.yaml files -> sections
     uv run python -m pipelines.rulebook draft     # sections -> drafted rules (needs GEMINI_API_KEY)
     uv run python -m pipelines.rulebook group     # similar drafts -> one idea each
@@ -33,7 +34,7 @@ from pipelines.rulebook.grouping import DEFAULT_THRESHOLD, read_groups
 from pipelines.rulebook.review import Review, run_review
 from pipelines.rulebook.workspace import DEFAULT_WORKSPACE, Workspace
 
-STEPS = ("extract", "draft", "group", "review", "seed")
+STEPS = ("scan", "extract", "draft", "group", "review", "seed")
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -70,6 +71,9 @@ def main(argv: Sequence[str] | None = None) -> None:
 
 def run(args: argparse.Namespace) -> None:
     workspace = Workspace(args.workspace)
+    if args.step == "scan":
+        steps.scan(workspace)
+        return
     if args.step == "seed":
         steps.seed(args.rulebook)
         return

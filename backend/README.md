@@ -79,6 +79,7 @@ which git ignores.
 
 | Step      | What it does                                                                 |
 |-----------|------------------------------------------------------------------------------|
+| `scan`    | Adds an entry to `data/rulebook/sources.yaml` for each new file in `data/rulebook/`, with the title, authors and year read from the file's metadata (PDF info, EPUB metadata), and papers told apart from books by length. Check the guesses; missing ones are marked `TODO` |
 | `extract` | Splits each file in `data/rulebook/sources.yaml` into sections: PDFs by their bookmarks (or every 12 pages), EPUBs by reading order, text and Markdown by headings |
 | `draft`   | Asks Gemini (free tier, about 8 requests a minute) for up to 8 candidate rules per section, in its own words. Resumable: sections already drafted are skipped |
 | `group`   | Groups drafts that say the same thing (bge-small similarity), so each idea is reviewed once and cites every source behind it |
@@ -87,8 +88,9 @@ which git ignores.
 
 ```bash
 cd backend
-mkdir -p data/rulebook   # put the files here and list them in data/rulebook/sources.yaml
-uv run python -m pipelines.rulebook extract   # prints the expected sources.yaml format if it's missing
+mkdir -p data/rulebook   # put the files here, in subfolders if you like
+uv run python -m pipelines.rulebook scan      # then check data/rulebook/sources.yaml
+uv run python -m pipelines.rulebook extract
 echo 'GEMINI_API_KEY=...' >> .env
 uv run python -m pipelines.rulebook draft
 uv run python -m pipelines.rulebook group
