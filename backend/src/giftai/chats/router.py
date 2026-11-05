@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from giftai.agent.dependencies import GiftAgentServiceDep
 from giftai.agent.schemas import ChatTurn, RecommendationList
@@ -65,9 +66,15 @@ async def send_message(
 
 @router.get(
     "/{chat_id}/recommendations",
-    summary="The gift picks from the chat's latest suggestions, best first",
+    summary="Gift picks: from the given replies, or from the chat's latest suggestions",
 )
-async def latest_recommendations(
-    chat_id: uuid.UUID, user: CurrentUser, agent: GiftAgentServiceDep
+async def list_recommendations(
+    chat_id: uuid.UUID,
+    user: CurrentUser,
+    agent: GiftAgentServiceDep,
+    message_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(max_length=50, description="Assistant replies whose picks to return"),
+    ] = None,
 ) -> RecommendationList:
-    return await agent.latest_recommendations(user, chat_id)
+    return await agent.recommendations(user, chat_id, message_id or ())

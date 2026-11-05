@@ -1,130 +1,19 @@
 """The gift agent end to end: real database, catalog and rulebook; a scripted LLM."""
 
-import re
-from collections.abc import AsyncIterator, Callable
-from datetime import date, timedelta
-from typing import Any
+from collections.abc import Callable
+from datetime import timedelta
 
-import pytest
-from httpx import AsyncClient
-
-from giftai.agent.outputs import GiftPicks, PickedGift, TurnAnalysis
-from giftai.llm.base import LlmMessage
-from giftai.llm.dependencies import get_chat_model
-from pipelines.catalog import steps as catalog_steps
-from pipelines.catalog.config import SelectionRules
-from pipelines.catalog.neighbors import AlsParameters
-from pipelines.catalog.workspace import Workspace
-from pipelines.rulebook import steps as rulebook_steps
+from giftai.agent.outputs import TurnAnalysis
+from tests.api.agent_support import (
+    FAREWELL,
+    AgentClient,
+    analysis,
+    new_chat,
+    second_turn,
+    send,
+)
 from tests.api.conftest import Headers, create_recipient
-from tests.auth_helpers import TokenIssuer
-from tests.catalog_samples import CATEGORY, COFFEE, write_sample_dataset
-from tests.conftest import build_test_app, make_settings, open_client
-from tests.fakes import HashingTextEmbedder, ScriptedChatModel
-from tests.rulebook_samples import write_rulebook
-
-FAREWELL = date.today() + timedelta(days=30)
-
-
-@pytest.fixture(scope="module")
-def catalog_and_rules(test_database_url: str, tmp_path_factory: pytest.TempPathFactory) -> None:
-    workspace = Workspace(tmp_path_factory.mktemp("catalog"))
-    write_sample_dataset(workspace)
-    catalog_steps.select(workspace, [CATEGORY], SelectionRules())
-    catalog_steps.embed(workspace, HashingTextEmbedder())
-    catalog_steps.neighbors(
-        workspace, [CATEGORY], AlsParameters(factors=2, iterations=20, neighbors_per_product=4)
-    )
-    catalog_steps.load(workspace, test_database_url)
-    rulebook = write_rulebook(tmp_path_factory.mktemp("rulebook") / "rulebook.yaml")
-    rulebook_steps.seed(rulebook, test_database_url)
-
-
-def analysis(**fields: Any) -> TurnAnalysis:
-    values: dict[str, Any] = {
-        "recipient_name": None,
-        "relationship": None,
-        "occasion": None,
-        "occasion_date": None,
-        "budget_min_usd": None,
-        "budget_max_usd": None,
-        "interests": [],
-        "personality": None,
-        "avoid": [],
-        "wants_suggestions_now": False,
-        "search_queries": [],
-        "next_question": None,
-    }
-    return TurnAnalysis(**(values | fields))
-
-
-def first_turn(_: str, __: list[LlmMessage]) -> TurnAnalysis:
-    return analysis(relationship="coworker", next_question="What does she enjoy?")
-
-
-def second_turn(_: str, __: list[LlmMessage]) -> TurnAnalysis:
-    return analysis(
-        recipient_name="Priya",
-        relationship="coworker",
-        occasion="farewell",
-        occasion_date=FAREWELL.isoformat(),
-        budget_min_usd=15,
-        budget_max_usd=30,
-        interests=["coffee"],
-        search_queries=["coffee kit", "coffee grinder"],
-    )
-
-
-def pick_coffee(system: str, _: list[LlmMessage]) -> GiftPicks:
-    offered = re.findall(r'"asin": "(\w+)"', system)
-    coffee = [asin for asin in offered if asin in COFFEE]
-    picks = [
-        PickedGift(asin=asin, why=f"She loves coffee ({asin}).", rule_ids=["R-001", "R-999"])
-        for asin in coffee[:4]
-    ]
-    # Made-up products are dropped.
-    picks.append(PickedGift(asin="B0NOTREAL1", why="Invented.", rule_ids=[]))
-    return GiftPicks(intro="Here are a few ideas for Priya.", picks=picks)
-
-
-class AgentClient:
-    def __init__(self, client: AsyncClient, model: ScriptedChatModel) -> None:
-        self.client = client
-        self.model = model
-
-
-@pytest.fixture
-async def agent(
-    catalog_and_rules: None, test_database_url: str, token_issuer: TokenIssuer
-) -> AsyncIterator[AgentClient]:
-    model = ScriptedChatModel({TurnAnalysis: first_turn, GiftPicks: pick_coffee})
-    app = build_test_app(
-        make_settings(test_database_url, agent_turns_per_user_per_day=3), token_issuer
-    )
-    app.dependency_overrides[get_chat_model] = lambda: model
-    async with open_client(app) as client:
-        yield AgentClient(client, model)
-
-
-@pytest.fixture
-def user(new_user: Callable[[], Headers]) -> Headers:
-    return new_user()
-
-
-async def send(agent: AgentClient, headers: Headers, chat_id: str, text: str) -> dict[str, Any]:
-    response = await agent.client.post(
-        f"/api/v1/chats/{chat_id}/messages", json={"content": text}, headers=headers
-    )
-    assert response.status_code == 201, response.text
-    turn: dict[str, Any] = response.json()
-    return turn
-
-
-async def new_chat(agent: AgentClient, headers: Headers, **fields: object) -> str:
-    response = await agent.client.post("/api/v1/chats", json=fields, headers=headers)
-    assert response.status_code == 201, response.text
-    chat_id: str = response.json()["id"]
-    return chat_id
+from tests.catalog_samples import COFFEE
 
 
 async def test_the_agent_asks_first_then_suggests_gifts_that_follow_the_rules(

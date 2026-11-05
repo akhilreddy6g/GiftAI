@@ -28,6 +28,7 @@ from giftai.agent.prompts import pick_prompt, understand_prompt
 from giftai.agent.ranking import Candidate, rank
 from giftai.catalog.repository import ProductRepository
 from giftai.embeddings.base import TextEmbedder
+from giftai.feedback.repository import AvailabilityRepository
 from giftai.llm.base import ChatModel, LlmMessage
 from giftai.rulebook.models import GiftingRule
 from giftai.rulebook.retrieval import GiftSituation, KnowledgeRetriever
@@ -71,6 +72,7 @@ class AgentDependencies:
     products: ProductRepository
     embedder: TextEmbedder
     knowledge: KnowledgeRetriever
+    availability: AvailabilityRepository
 
 
 def build_agent(
@@ -106,6 +108,10 @@ def build_agent(
         )
         queries = search_queries(state["analysis"], profile)
         candidates = await gather_candidates(deps.products, deps.embedder, queries, budget)
+        votes = await deps.availability.counts([c.product.asin for c in candidates])
+        for candidate in candidates:
+            if candidate.product.asin in votes:
+                candidate.availability = votes[candidate.product.asin].status
         return {"shortlist": rank(candidates, budget, state["already_shown"]), "rules": rules}
 
     def has_shortlist(state: TurnState) -> str:
