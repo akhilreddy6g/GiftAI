@@ -87,40 +87,16 @@
   <div class="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2">
     <p class="mt-2 text-sm">{{ pick().reason }}</p>
 
-    @if (pick().rules.length) {
-      <details class="mt-2 text-sm">
-        <summary class="cursor-pointer font-medium text-accent-text">Why this gift</summary>
-        <ul class="mt-1.5 space-y-1 text-ink-muted">
-          @for (rule of pick().rules; track rule.id) {
-            <li>
-              <span class="font-medium text-ink">{{ rule.kind === 'do' ? 'Do' : "Don't" }}:</span>
-              {{ rule.rule }}
-            </li>
-          }
-        </ul>
-      </details>
-    }
-
     <div class="mt-3 flex flex-wrap items-center gap-2">
       <a
         class="btn btn-primary"
-        [href]="pick().add_to_cart_url"
+        [href]="product().amazon_url"
         target="_blank"
         rel="noopener noreferrer"
         (click)="opened('added_to_cart')"
       >
         <app-icon name="cart" [size]="18" />
-        Add to cart<span class="sr-only"> on Amazon (opens in a new tab)</span>
-      </a>
-      <a
-        class="btn btn-secondary"
-        [href]="product().amazon_url"
-        target="_blank"
-        rel="noopener noreferrer"
-        (click)="opened('clicked')"
-      >
-        View on Amazon<span class="sr-only"> (opens in a new tab)</span>
-        <app-icon name="external" [size]="16" />
+        Buy on Amazon<span class="sr-only"> (opens in a new tab)</span>
       </a>
       <div class="ml-auto flex" role="group" [attr.aria-label]="'Rate ' + product().title">
         <button

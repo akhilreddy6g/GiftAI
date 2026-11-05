@@ -81,22 +81,8 @@
   }
 </nav>
 
-<section class="shrink-0 space-y-3 border-t border-line p-3" aria-label="Account">
-  <app-theme-picker />
-  @if (auth.email(); as email) {
-    <p class="truncate px-1 text-sm text-ink-muted" [title]="email">
-      Signed in as <span class="font-medium text-ink">{{ email }}</span>
-    </p>
-  }
-  <div class="flex gap-2">
-    <button type="button" class="btn btn-secondary flex-1" (click)="signOut()">
-      <app-icon name="logout" [size]="18" />
-      Sign out
-    </button>
-    <button type="button" class="btn btn-ghost text-danger" (click)="askToDeleteAccount()">
-      Delete account
-    </button>
-  </div>
+<section class="shrink-0 border-t border-line p-3" aria-label="Account">
+  <app-account-menu (signOut)="signOut()" (deleteAccount)="askToDeleteAccount()" />
 </section>
 
 <app-confirm-dialog

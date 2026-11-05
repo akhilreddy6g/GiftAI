@@ -23,6 +23,8 @@ const PATHS = {
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
   star: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3l-5.5 2.9 1-6.2L3 9.6l6.2-.9L12 3z',
   check: 'M5 12l5 5 9-10',
+  'chevron-right': 'M9 6l6 6-6 6',
+  'chevron-up-down': 'M8 9l4-4 4 4M8 15l4 4 4-4',
   'thumbs-up':
     'M7 10v10H4V10h3zm0 0 4-7a2 2 0 0 1 3 2l-1 4h6a2 2 0 0 1 2 2.3l-1.2 7a2 2 0 0 1-2 1.7H7',
   'thumbs-down':

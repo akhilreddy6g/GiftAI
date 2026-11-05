@@ -7,9 +7,9 @@ import { Conversation } from './conversation';
 let nextId = 0;
 
 /**
- * One suggested gift: its photo, price and rating, why it suits the person, links to it
- * on Amazon, thumbs up or down, and, after the user comes back from Amazon, "Did you find
- * it?".
+ * One suggested gift: its photo, price and rating, why it suits the person, a link to buy
+ * it on Amazon, thumbs up or down, and, after the user comes back from Amazon, "Did you
+ * find it?".
  */
 @Component({
   selector: 'app-gift-card',

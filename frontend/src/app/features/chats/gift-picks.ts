@@ -1,14 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { Icon } from '../../core/ui/icon';
 import { formatPlainDate } from './chat-dates';
-import { Conversation, type ReplyPicks } from './conversation';
+import { type ReplyPicks } from './conversation';
 import { GiftCard } from './gift-card';
 
-/** The gifts one reply suggested, with a button that adds them all to the Amazon cart. */
+/** The gifts one reply suggested, with the date to order by. */
 @Component({
   selector: 'app-gift-picks',
-  imports: [GiftCard, Icon],
+  imports: [GiftCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -19,28 +18,11 @@ import { GiftCard } from './gift-card';
         }
       </ol>
 
-      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        @if (picks().addAllUrl && picks().items.length > 1) {
-          <a
-            class="btn btn-secondary"
-            [href]="picks().addAllUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            (click)="addedAll()"
-          >
-            <app-icon name="cart" [size]="18" />
-            Add all {{ picks().items.length }} to your Amazon cart<span class="sr-only">
-              (opens in a new tab)</span
-            >
-          </a>
-        }
-        @if (orderByLabel(); as label) {
-          <p class="text-sm font-medium">Order by {{ label }} so it arrives in time.</p>
-        }
-      </div>
+      @if (orderByLabel(); as label) {
+        <p class="mt-3 text-sm font-medium">Order by {{ label }} so it arrives in time.</p>
+      }
       <p class="mt-2 text-xs text-ink-muted">
-        Prices are from 2023 and may have changed. Amazon asks you to confirm before anything goes
-        in your cart.
+        Prices are from 2023 and may have changed. Pick the size or color you want on Amazon.
       </p>
     </section>
   `,
@@ -50,14 +32,8 @@ export class GiftPicks {
   /** The last day to order, shown only with the newest picks. */
   readonly orderBy = input<string | null>(null);
 
-  private readonly conversation = inject(Conversation);
-
   protected readonly orderByLabel = computed(() => {
     const date = this.orderBy();
     return date ? formatPlainDate(date) : null;
   });
-
-  protected addedAll(): void {
-    this.conversation.logEvent('added_to_cart', this.picks().items);
-  }
 }

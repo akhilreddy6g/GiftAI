@@ -49,7 +49,7 @@ describe('GiftCard', () => {
     await settle();
   }
 
-  it('shows the photo, price, rating, reason and the rules behind it', () => {
+  it('shows the photo, price, rating and reason', () => {
     const { element } = render();
 
     const image = element.querySelector('img')!;
@@ -60,26 +60,21 @@ describe('GiftCard', () => {
     expect(element.textContent).toContain('4.6');
     expect(element.textContent).toContain('1,234');
     expect(element.textContent).toContain('She loves slow mornings');
-    expect(element.querySelector('details')?.textContent).toContain(
-      'Choose something they will use often.',
-    );
+    expect(element.querySelector('details')).toBeNull();
   });
 
-  it('links to the product and to an Amazon add-to-cart page, in a new tab', () => {
+  it('sends Buy on Amazon to the product page, where the size or color is chosen', () => {
     const { link } = render();
 
-    const cart = link('Add to cart');
-    expect(cart.href).toBe(
-      'https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=B000COFFEE&Quantity.1=1',
-    );
-    expect(cart.target).toBe('_blank');
-    expect(cart.rel).toContain('noopener');
-    expect(link('View on Amazon').href).toBe('https://www.amazon.com/dp/B000COFFEE');
+    const buy = link('Buy on Amazon');
+    expect(buy.href).toBe('https://www.amazon.com/dp/B000COFFEE');
+    expect(buy.target).toBe('_blank');
+    expect(buy.rel).toContain('noopener');
   });
 
-  it('logs a cart add, then asks whether they found it once they come back', async () => {
+  it('logs buying intent, then asks whether they found it once they come back', async () => {
     const { fixture, element, link, button } = render();
-    const cart = link('Add to cart');
+    const cart = link('Buy on Amazon');
     cart.addEventListener('click', (event) => event.preventDefault());
 
     cart.click();
@@ -105,13 +100,13 @@ describe('GiftCard', () => {
   });
 
   it("doesn't ask someone who already answered for this product", async () => {
-    const { fixture, element, link } = render(
+    const { fixture, element } = render(
       pick({
         availability: { status: 'verified', found_votes: 3, not_found_votes: 0, your_vote: true },
       }),
     );
     expect(element.textContent).toContain('Found on Amazon by 3 people');
-    const view = link('View on Amazon');
+    const view = element.querySelector<HTMLAnchorElement>('h3 a')!;
     view.addEventListener('click', (event) => event.preventDefault());
 
     view.click();

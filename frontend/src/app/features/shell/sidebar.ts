@@ -17,12 +17,12 @@ import { ConfirmDialog } from '../../core/ui/confirm-dialog';
 import { Icon } from '../../core/ui/icon';
 import { formatChatDate } from '../chats/chat-dates';
 import { ChatsStore } from '../chats/chats.store';
-import { ThemePicker } from './theme-picker';
+import { AccountMenu } from './account-menu';
 
 /** The chat list with the account controls, shown as a sidebar or inside the drawer. */
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, Icon, ThemePicker, ConfirmDialog],
+  imports: [RouterLink, RouterLinkActive, Icon, AccountMenu, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex h-full min-h-0 flex-col' },
   templateUrl: './sidebar.html',
@@ -33,7 +33,7 @@ export class Sidebar implements OnInit {
   readonly closeRequested = output();
 
   protected readonly store = inject(ChatsStore);
-  protected readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthService);
   private readonly api = inject(ApiClient);
   private readonly router = inject(Router);
   private readonly deleteDialog = viewChild.required<ConfirmDialog>('deleteAccountDialog');

@@ -3,7 +3,7 @@
     "collect": {
       "staticDistDir": "./dist/frontend/browser",
       "url": ["http://localhost/"],
-      "numberOfRuns": 1,
+      "numberOfRuns": 3,
       "settings": { "chromeFlags": "--headless=new --no-sandbox" }
     },
     "assert": {

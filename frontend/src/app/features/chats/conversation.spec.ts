@@ -73,10 +73,7 @@ describe('Conversation', () => {
       order_by: null,
     });
     await loading;
-    expect(conversation.picks().get('m0')).toEqual({
-      items: [pick({ message_id: 'm0' })],
-      addAllUrl: 'https://cart.test/m0',
-    });
+    expect(conversation.picks().get('m0')).toEqual({ items: [pick({ message_id: 'm0' })] });
 
     expect(conversation.messages().map((m) => m.id)).toEqual(['m0', 'm1', 'm2']);
     expect(conversation.hasOlder()).toBe(false);
@@ -130,7 +127,6 @@ describe('Conversation', () => {
 
     const group = conversation.picks().get('reply');
     expect(group?.items.map((item) => item.id)).toEqual(['pick-1', 'pick-2']);
-    expect(group?.addAllUrl).toBe('https://cart.test/all');
     expect(conversation.orderBy()).toBe('2026-12-07');
   });
 

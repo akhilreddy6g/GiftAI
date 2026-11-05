@@ -26,8 +26,6 @@ export type SendResult = { ok: true } | { ok: false; error: ApiError };
 /** The gifts one assistant reply suggested, in the order it gave them. */
 export interface ReplyPicks {
   items: RecommendationRead[];
-  /** Adds all of them to the user's Amazon cart at once. */
-  addAllUrl: string | null;
 }
 
 /**
@@ -141,10 +139,7 @@ export class Conversation {
         ]);
         if (turn.recommendations.length) {
           this.picks.update((picks) =>
-            new Map(picks).set(turn.reply.id, {
-              items: turn.recommendations,
-              addAllUrl: turn.add_all_to_cart_url,
-            }),
+            new Map(picks).set(turn.reply.id, { items: turn.recommendations }),
           );
         }
         this.orderBy.set(turn.order_by);
@@ -241,10 +236,7 @@ function withPicks(
   for (const item of list.items) {
     const group = next.get(item.message_id);
     if (group && group.items.some((existing) => existing.id === item.id)) continue;
-    next.set(item.message_id, {
-      items: [...(group?.items ?? []), item],
-      addAllUrl: list.add_all_to_cart_urls[item.message_id] ?? null,
-    });
+    next.set(item.message_id, { items: [...(group?.items ?? []), item] });
   }
   return next;
 }

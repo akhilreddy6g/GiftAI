@@ -40,7 +40,7 @@ const EXAMPLES = [
         <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Who are you shopping for?</h1>
         <p class="mt-3 text-ink-muted">
           Tell GiftAI about them: what they're into, the occasion and your budget. It will ask a few
-          questions, then suggest gifts from Amazon and explain why each one fits.
+          questions, then suggest gifts from Amazon.
         </p>
 
         <h2 class="mt-8 mb-3 text-sm font-medium text-ink-muted">Try something like</h2>
