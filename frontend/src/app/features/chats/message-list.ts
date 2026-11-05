@@ -4,6 +4,7 @@ import {
   ElementRef,
   Injector,
   afterNextRender,
+  computed,
   effect,
   inject,
   input,
@@ -11,7 +12,9 @@ import {
   untracked,
 } from '@angular/core';
 
-import type { ThreadMessage } from './conversation';
+import type { ReplyPicks, ThreadMessage } from './conversation';
+import { GiftPicks } from './gift-picks';
+import { replyTextAboveCards } from './reply-text';
 
 /**
  * The conversation, oldest message first. It follows new messages to the bottom, and
@@ -19,6 +22,7 @@ import type { ThreadMessage } from './conversation';
  */
 @Component({
   selector: 'app-message-list',
+  imports: [GiftPicks],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block overflow-y-auto' },
   template: `
@@ -59,7 +63,12 @@ import type { ThreadMessage } from './conversation';
             </li>
           }
           @for (message of messages(); track message.id) {
-            <li class="flex" [class.justify-end]="message.role === 'user'">
+            @let replyPicks = picks().get(message.id);
+            <li
+              class="flex flex-col"
+              [class.items-end]="message.role === 'user'"
+              [attr.data-message-id]="message.id"
+            >
               <div
                 class="max-w-[85%] rounded-2xl px-4 py-3 break-words whitespace-pre-wrap"
                 [class]="
@@ -72,11 +81,24 @@ import type { ThreadMessage } from './conversation';
                 <span class="sr-only">{{
                   message.role === 'user' ? 'You said: ' : 'GiftAI said: '
                 }}</span
-                >{{ message.content }}
+                >{{ replyPicks ? replyTextAboveCards(message.content) : message.content }}
                 @if (message.pending) {
                   <span class="sr-only"> (sending)</span>
                 }
               </div>
+              @if (replyPicks) {
+                <app-gift-picks
+                  class="mt-3 w-full"
+                  [picks]="replyPicks"
+                  [orderBy]="message.id === newestPicksId() ? orderBy() : null"
+                />
+              }
+            </li>
+          }
+          @if (picksError(); as error) {
+            <li class="alert-error">
+              <p role="alert">The gift ideas in this chat didn't load. {{ error }}</p>
+              <button type="button" class="link mt-1" (click)="retryPicks.emit()">Try again</button>
             </li>
           }
           @if (thinking()) {
@@ -111,9 +133,25 @@ export class MessageList {
   readonly loadingOlder = input(false);
   /** True while the assistant is working on a reply. */
   readonly thinking = input(false);
+  /** Gift picks by the id of the reply that suggested them. */
+  readonly picks = input<ReadonlyMap<string, ReplyPicks>>(new Map());
+  readonly orderBy = input<string | null>(null);
+  readonly picksError = input<string | null>(null);
 
   readonly loadOlder = output();
   readonly retry = output();
+  readonly retryPicks = output();
+
+  protected readonly replyTextAboveCards = replyTextAboveCards;
+  /** The newest reply with picks: the order-by date goes with it. */
+  protected readonly newestPicksId = computed(() => {
+    const picks = this.picks();
+    return (
+      this.messages()
+        .filter((message) => picks.has(message.id))
+        .at(-1)?.id ?? null
+    );
+  });
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly injector = inject(Injector);
@@ -123,22 +161,33 @@ export class MessageList {
     effect(() => {
       const messages = this.messages();
       this.thinking();
+      this.picks();
       this.loading();
       untracked(() => this.keepPosition(messages));
     });
   }
 
   private keepPosition(messages: ThreadMessage[]): void {
-    const newestId = messages.at(-1)?.id;
-    // Same newest message: older ones were added above, so hold the reader's place.
-    const prepended = newestId !== undefined && newestId === this.lastId;
-    this.lastId = newestId;
+    const newest = messages.at(-1);
+    // Same newest message: older ones (or gift cards) were added above, so hold the place.
+    const prepended = newest !== undefined && newest.id === this.lastId;
+    this.lastId = newest?.id;
     const distanceFromBottom = this.host.scrollHeight - this.host.scrollTop;
+    // A reply with gift cards is taller than the screen: show it from its start.
+    const showFromTop = !prepended && newest !== undefined && this.picks().has(newest.id);
     afterNextRender(
       () => {
-        this.host.scrollTop = prepended
-          ? this.host.scrollHeight - distanceFromBottom
-          : this.host.scrollHeight;
+        const reply = showFromTop
+          ? this.host.querySelector(`[data-message-id="${newest.id}"]`)
+          : null;
+        if (reply) {
+          this.host.scrollTop +=
+            reply.getBoundingClientRect().top - this.host.getBoundingClientRect().top - 16;
+        } else {
+          this.host.scrollTop = prepended
+            ? this.host.scrollHeight - distanceFromBottom
+            : this.host.scrollHeight;
+        }
       },
       { injector: this.injector },
     );

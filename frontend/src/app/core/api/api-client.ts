@@ -23,6 +23,10 @@ export class ApiClient {
     return this.send<P, 'post'>('post', path, options);
   }
 
+  put<P extends PathsWith<'put'>>(path: P, options: RequestOptions<P, 'put'>) {
+    return this.send<P, 'put'>('put', path, options);
+  }
+
   patch<P extends PathsWith<'patch'>>(path: P, options: RequestOptions<P, 'patch'>) {
     return this.send<P, 'patch'>('patch', path, options);
   }
@@ -47,7 +51,7 @@ export class ApiClient {
       body,
     } = options as {
       path?: Record<string, string>;
-      query?: Record<string, string | number | boolean | null | undefined>;
+      query?: Record<string, QueryValue>;
       body?: unknown;
     };
     const url = this.baseUrl + fillPath(path, pathParams ?? {});
@@ -72,10 +76,14 @@ function fillPath(template: string, params: Record<string, string>): string {
   });
 }
 
+type QueryScalar = string | number | boolean;
+type QueryValue = QueryScalar | readonly QueryScalar[] | null | undefined;
+
+/** Drops unset values; a list repeats its key (``?message_id=a&message_id=b``). */
 function withoutEmpty(
-  query: Record<string, string | number | boolean | null | undefined>,
-): Record<string, string | number | boolean> {
-  const params: Record<string, string | number | boolean> = {};
+  query: Record<string, QueryValue>,
+): Record<string, QueryScalar | readonly QueryScalar[]> {
+  const params: Record<string, QueryScalar | readonly QueryScalar[]> = {};
   for (const [key, value] of Object.entries(query)) {
     if (value !== null && value !== undefined) params[key] = value;
   }

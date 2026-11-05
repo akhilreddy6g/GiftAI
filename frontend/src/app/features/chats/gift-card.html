@@ -1,0 +1,201 @@
+<article
+  class="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-3 rounded-xl border border-line bg-surface p-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-4 sm:p-4"
+  [attr.aria-labelledby]="id + '-title'"
+>
+  <!-- The photo repeats the title link for pointer users; keyboards and screen readers use the title. -->
+  <a
+    class="flex size-20 items-center justify-center overflow-hidden rounded-lg bg-white sm:row-span-2 sm:size-28"
+    [href]="product().amazon_url"
+    target="_blank"
+    rel="noopener noreferrer"
+    tabindex="-1"
+    aria-hidden="true"
+    (click)="opened('clicked')"
+  >
+    @if (imageFailed()) {
+      <app-icon name="gift" [size]="28" class="text-[#8c7f74]" />
+    } @else {
+      <img
+        class="size-full object-contain"
+        [src]="product().image_url"
+        alt=""
+        width="112"
+        height="112"
+        loading="lazy"
+        decoding="async"
+        referrerpolicy="no-referrer"
+        (error)="imageFailed.set(true)"
+      />
+    }
+  </a>
+
+  <div class="min-w-0">
+    <h3 [id]="id + '-title'" class="leading-snug font-medium">
+      <a
+        class="line-clamp-3 hover:underline"
+        [href]="product().amazon_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        (click)="opened('clicked')"
+        >{{ product().title }}<span class="sr-only"> (opens Amazon in a new tab)</span></a
+      >
+    </h3>
+
+    <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+      <span>
+        About <span class="font-medium text-ink">{{ price() }}</span
+        >&nbsp;<span class="text-xs">(2023 price)</span>
+      </span>
+      @if (product().rating_count > 0) {
+        <span class="inline-flex items-center gap-1">
+          <app-icon name="star" [size]="14" class="text-accent-text" />
+          <span
+            ><span class="sr-only">Rated </span>{{ product().rating_average.toFixed(1)
+            }}<span class="sr-only"> out of 5 from</span> ({{ ratingCount()
+            }}<span class="sr-only"> ratings</span>)</span
+          >
+        </span>
+      }
+    </p>
+
+    @switch (availability().status) {
+      @case ('likely_gone') {
+        <p class="mt-2 text-sm text-ink">
+          <app-icon name="alert" [size]="16" class="mr-1 align-[-3px] text-danger" />
+          Others couldn't find this on Amazon lately.
+          <a
+            class="link"
+            [href]="product().amazon_search_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="opened('clicked')"
+            >Search for it<span class="sr-only"> on Amazon (opens in a new tab)</span></a
+          >
+        </p>
+      }
+      @case ('verified') {
+        <p class="mt-2 text-sm text-success-text">
+          <app-icon name="check" [size]="16" class="mr-1 align-[-3px]" />
+          Found on Amazon by {{ availability().found_votes }}
+          {{ availability().found_votes === 1 ? 'person' : 'people' }}
+        </p>
+      }
+    }
+  </div>
+
+  <!-- Full width under the photo on phones; beside it on wider screens. -->
+  <div class="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2">
+    <p class="mt-2 text-sm">{{ pick().reason }}</p>
+
+    @if (pick().rules.length) {
+      <details class="mt-2 text-sm">
+        <summary class="cursor-pointer font-medium text-accent-text">Why this gift</summary>
+        <ul class="mt-1.5 space-y-1 text-ink-muted">
+          @for (rule of pick().rules; track rule.id) {
+            <li>
+              <span class="font-medium text-ink">{{ rule.kind === 'do' ? 'Do' : "Don't" }}:</span>
+              {{ rule.rule }}
+            </li>
+          }
+        </ul>
+      </details>
+    }
+
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <a
+        class="btn btn-primary"
+        [href]="pick().add_to_cart_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        (click)="opened('added_to_cart')"
+      >
+        <app-icon name="cart" [size]="18" />
+        Add to cart<span class="sr-only"> on Amazon (opens in a new tab)</span>
+      </a>
+      <a
+        class="btn btn-secondary"
+        [href]="product().amazon_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        (click)="opened('clicked')"
+      >
+        View on Amazon<span class="sr-only"> (opens in a new tab)</span>
+        <app-icon name="external" [size]="16" />
+      </a>
+      <div class="ml-auto flex" role="group" [attr.aria-label]="'Rate ' + product().title">
+        <button
+          type="button"
+          class="icon-btn aria-pressed:bg-accent-soft aria-pressed:text-accent-text"
+          aria-label="Good idea"
+          [attr.aria-pressed]="pick().rating === 'up'"
+          (click)="rate('up')"
+        >
+          <app-icon name="thumbs-up" />
+        </button>
+        <button
+          type="button"
+          class="icon-btn aria-pressed:bg-accent-soft aria-pressed:text-accent-text"
+          aria-label="Not for them"
+          [attr.aria-pressed]="pick().rating === 'down'"
+          (click)="rate('down')"
+        >
+          <app-icon name="thumbs-down" />
+        </button>
+      </div>
+    </div>
+
+    @if (ratingError(); as message) {
+      <p class="field-error" role="alert">{{ message }}</p>
+    }
+
+    <div aria-live="polite">
+      @if (askingFound()) {
+        <div
+          class="mt-3 rounded-lg bg-surface-muted p-3 text-sm"
+          role="group"
+          [attr.aria-labelledby]="id + '-found'"
+        >
+          <p [id]="id + '-found'" class="font-medium">Did you find it on Amazon?</p>
+          <p class="text-ink-muted">Your answer helps others skip gifts that are gone.</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="voting()"
+              (click)="answerFound(true)"
+            >
+              Yes, it's there
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="voting()"
+              (click)="answerFound(false)"
+            >
+              No, I couldn't find it
+            </button>
+            <button type="button" class="btn btn-ghost" (click)="dismissFound()">Not now</button>
+          </div>
+          @if (voteError(); as message) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </div>
+      } @else if (votedFound() === true) {
+        <p class="mt-3 text-sm text-ink-muted">Thanks, that helps others.</p>
+      } @else if (votedFound() === false) {
+        <p class="mt-3 text-sm text-ink-muted">
+          Thanks, we'll show it lower for others.
+          <a
+            class="link"
+            [href]="product().amazon_search_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Search Amazon for something like it<span class="sr-only">
+              (opens in a new tab)</span
+            ></a
+          >
+        </p>
+      }
+    </div>
+  </div>
+</article>

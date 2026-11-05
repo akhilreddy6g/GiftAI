@@ -1,6 +1,29 @@
 {
   "components": {
     "schemas": {
+      "AvailabilityStatus": {
+        "enum": [
+          "verified",
+          "unverified",
+          "likely_gone"
+        ],
+        "title": "AvailabilityStatus",
+        "type": "string"
+      },
+      "AvailabilityVoteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "found": {
+            "title": "Found",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "found"
+        ],
+        "title": "AvailabilityVoteCreate",
+        "type": "object"
+      },
       "ChatCreate": {
         "additionalProperties": false,
         "description": "Every field is optional: a chat can start empty and the agent fills in details.",
@@ -379,6 +402,35 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "FeedbackEventCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "clicked",
+              "added_to_cart"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "recommendation_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Recommendation Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "recommendation_ids"
+        ],
+        "title": "FeedbackEventCreate",
+        "type": "object"
+      },
       "LivenessReport": {
         "properties": {
           "status": {
@@ -547,6 +599,40 @@
         "title": "Page[RecipientRead]",
         "type": "object"
       },
+      "ProductAvailability": {
+        "properties": {
+          "found_votes": {
+            "title": "Found Votes",
+            "type": "integer"
+          },
+          "not_found_votes": {
+            "title": "Not Found Votes",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AvailabilityStatus"
+          },
+          "your_vote": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Your Vote"
+          }
+        },
+        "required": [
+          "status",
+          "found_votes",
+          "not_found_votes",
+          "your_vote"
+        ],
+        "title": "ProductAvailability",
+        "type": "object"
+      },
       "ProductRead": {
         "properties": {
           "amazon_search_url": {
@@ -633,6 +719,31 @@
           "amazon_search_url"
         ],
         "title": "ProductRead",
+        "type": "object"
+      },
+      "RatingUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "rating": {
+            "anyOf": [
+              {
+                "enum": [
+                  "up",
+                  "down"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "RatingUpdate",
         "type": "object"
       },
       "ReadinessReport": {
@@ -816,16 +927,15 @@
       },
       "RecommendationList": {
         "properties": {
-          "add_all_to_cart_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Add All To Cart Url"
+          "add_all_to_cart_urls": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "title": "Add All To Cart Urls",
+            "type": "object"
           },
           "items": {
             "items": {
@@ -833,11 +943,24 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
           }
         },
         "required": [
           "items",
-          "add_all_to_cart_url"
+          "add_all_to_cart_urls",
+          "order_by"
         ],
         "title": "RecommendationList",
         "type": "object"
@@ -848,9 +971,17 @@
             "title": "Add To Cart Url",
             "type": "string"
           },
+          "availability": {
+            "$ref": "#/components/schemas/ProductAvailability"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
             "type": "string"
           },
           "product": {
@@ -859,6 +990,21 @@
           "rank": {
             "title": "Rank",
             "type": "integer"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "enum": [
+                  "up",
+                  "down"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
           },
           "reason": {
             "title": "Reason",
@@ -874,11 +1020,14 @@
         },
         "required": [
           "id",
+          "message_id",
           "rank",
           "product",
           "reason",
           "rules",
-          "add_to_cart_url"
+          "add_to_cart_url",
+          "rating",
+          "availability"
         ],
         "title": "RecommendationRead",
         "type": "object"
@@ -1535,7 +1684,7 @@
     },
     "/api/v1/chats/{chat_id}/recommendations": {
       "get": {
-        "operationId": "latest_recommendations_api_v1_chats__chat_id__recommendations_get",
+        "operationId": "list_recommendations_api_v1_chats__chat_id__recommendations_get",
         "parameters": [
           {
             "in": "path",
@@ -1545,6 +1694,29 @@
               "format": "uuid",
               "title": "Chat Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Assistant replies whose picks to return",
+            "in": "query",
+            "name": "message_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "maxItems": 50,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Assistant replies whose picks to return",
+              "title": "Message Id"
             }
           }
         ],
@@ -1575,9 +1747,48 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "The gift picks from the chat's latest suggestions, best first",
+        "summary": "Gift picks: from the given replies, or from the chat's latest suggestions",
         "tags": [
           "chats"
+        ]
+      }
+    },
+    "/api/v1/feedback/events": {
+      "post": {
+        "operationId": "record_feedback_api_v1_feedback_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackEventCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Record that gift ideas were opened on Amazon or added to the cart",
+        "tags": [
+          "feedback"
         ]
       }
     },
@@ -1853,6 +2064,66 @@
         ]
       }
     },
+    "/api/v1/products/{asin}/availability": {
+      "put": {
+        "operationId": "vote_availability_api_v1_products__asin__availability_put",
+        "parameters": [
+          {
+            "description": "Amazon product id (ASIN)",
+            "in": "path",
+            "name": "asin",
+            "required": true,
+            "schema": {
+              "description": "Amazon product id (ASIN)",
+              "pattern": "^[A-Z0-9]{10}$",
+              "title": "Asin",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailabilityVoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAvailability"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Say whether the product could still be found on Amazon; replaces an earlier vote",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
     "/api/v1/recipients": {
       "get": {
         "operationId": "list_recipients_api_v1_recipients_get",
@@ -2104,6 +2375,57 @@
         "summary": "Change some of a person's details",
         "tags": [
           "recipients"
+        ]
+      }
+    },
+    "/api/v1/recommendations/{recommendation_id}/rating": {
+      "put": {
+        "operationId": "rate_recommendation_api_v1_recommendations__recommendation_id__rating_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recommendation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recommendation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Thumbs up or down on a gift idea, or null to clear it",
+        "tags": [
+          "feedback"
         ]
       }
     },

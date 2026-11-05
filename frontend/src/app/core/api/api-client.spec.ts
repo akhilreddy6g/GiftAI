@@ -40,6 +40,32 @@ describe('ApiClient', () => {
     await expect(response).resolves.toEqual({ items: [], next_cursor: null });
   });
 
+  it('repeats the key for each value of a list', async () => {
+    const response = api.get('/api/v1/chats/{chat_id}/recommendations', {
+      path: { chat_id: 'chat-1' },
+      query: { message_id: ['m1', 'm2'] },
+    });
+    await Promise.resolve();
+
+    http
+      .expectOne(`${API}/api/v1/chats/chat-1/recommendations?message_id=m1&message_id=m2`)
+      .flush({ items: [], add_all_to_cart_urls: {}, order_by: null });
+    await expect(response).resolves.toMatchObject({ items: [] });
+  });
+
+  it('resolves to null for a 204', async () => {
+    const response = api.put('/api/v1/recommendations/{recommendation_id}/rating', {
+      path: { recommendation_id: 'pick-1' },
+      body: { rating: 'up' },
+    });
+    await Promise.resolve();
+
+    const request = http.expectOne(`${API}/api/v1/recommendations/pick-1/rating`);
+    expect(request.request.method).toBe('PUT');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(response).resolves.toBeNull();
+  });
+
   it('sends JSON bodies', async () => {
     const response = api.patch('/api/v1/chats/{chat_id}', {
       path: { chat_id: 'chat-1' },

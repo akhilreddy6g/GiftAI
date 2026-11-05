@@ -1,7 +1,12 @@
 # GiftAI frontend
 
 The Angular app: sign-in, the chat list, and conversations with the gift assistant.
-Recommendation cards, the Amazon cart button and feedback arrive in the next milestone.
+
+Each reply that suggests gifts shows them as cards under it: the product photo, its 2023
+price and rating, why it suits the person and the gifting rules behind it, links to view it
+or add it to the Amazon cart (one at a time or all at once), and thumbs up or down. After
+someone opens a product and comes back to the tab, the card asks "Did you find it on
+Amazon?", and products most people couldn't find are ranked lower for everyone.
 
 ## Running it
 
