@@ -30,8 +30,19 @@ export class ServerWake {
   }
 }
 
+/**
+ * Sending a chat message runs the gift assistant, which takes several seconds even on an
+ * awake server; the chat shows "GiftAI is thinking…" for it instead.
+ */
+const SLOW_BY_DESIGN = /\/chats\/[^/]+\/messages$/;
+
+export function isSlowByDesign(method: string, url: string): boolean {
+  return method === 'POST' && SLOW_BY_DESIGN.test(url);
+}
+
 export const serverWakeInterceptor: HttpInterceptorFn = (request, next) => {
   if (!inject(ApiClient).isApiUrl(request.url)) return next(request);
+  if (isSlowByDesign(request.method, request.url)) return next(request);
   const done = inject(ServerWake).track();
   return next(request).pipe(finalize(done));
 };

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { SLOW_REQUEST_MS, ServerWake } from './server-wake';
+import { SLOW_REQUEST_MS, ServerWake, isSlowByDesign } from './server-wake';
 
 describe('ServerWake', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -26,5 +26,11 @@ describe('ServerWake', () => {
     vi.advanceTimersByTime(SLOW_REQUEST_MS * 2);
 
     expect(wake.isWaking()).toBe(false);
+  });
+
+  it('leaves out sending a chat message, which shows its own thinking notice', () => {
+    expect(isSlowByDesign('POST', 'http://api.test/api/v1/chats/c1/messages')).toBe(true);
+    expect(isSlowByDesign('GET', 'http://api.test/api/v1/chats/c1/messages')).toBe(false);
+    expect(isSlowByDesign('POST', 'http://api.test/api/v1/chats')).toBe(false);
   });
 });
