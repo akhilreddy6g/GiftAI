@@ -65,5 +65,15 @@ class MessageRepository:
         )
         return count or 0
 
+    async def recent_for_chat(self, chat_id: uuid.UUID, limit: int) -> list[Message]:
+        """The latest messages, oldest first, as the agent reads the conversation."""
+        rows = await self._session.scalars(
+            select(Message)
+            .where(Message.chat_id == chat_id)
+            .order_by(Message.created_at.desc(), Message.id.desc())
+            .limit(limit)
+        )
+        return list(reversed(rows.all()))
+
     def add(self, message: Message) -> None:
         self._session.add(message)

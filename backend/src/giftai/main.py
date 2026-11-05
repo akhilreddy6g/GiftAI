@@ -17,6 +17,7 @@ from giftai.core.request_context import REQUEST_ID_HEADER
 from giftai.db.session import Database
 from giftai.embeddings.dependencies import build_text_embedder
 from giftai.health.router import router as health_router
+from giftai.llm.dependencies import build_chat_model
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -32,6 +33,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         # Loads its model on the first search, so startup stays fast and light.
         app.state.text_embedder = build_text_embedder(settings)
+        app.state.chat_model = build_chat_model(settings)
+        app.state.agent_turns_per_day = settings.agent_turns_per_user_per_day
         try:
             yield
         finally:

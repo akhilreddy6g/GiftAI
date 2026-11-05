@@ -21,6 +21,7 @@ from sqlalchemy import create_engine, text
 from giftai.auth.dependencies import get_token_verifier
 from giftai.core.config import Environment, Settings, get_database_settings
 from giftai.embeddings.dependencies import get_text_embedder
+from giftai.llm.dependencies import get_chat_model
 from giftai.main import create_app
 from tests.auth_helpers import TEST_SUPABASE_URL, TokenIssuer
 from tests.fakes import HashingTextEmbedder
@@ -46,6 +47,8 @@ def build_test_app(settings: Settings, token_issuer: TokenIssuer) -> FastAPI:
     app = create_app(settings)
     app.dependency_overrides[get_token_verifier] = lambda: token_issuer.verifier
     app.dependency_overrides[get_text_embedder] = HashingTextEmbedder
+    # No real LLM in tests: agent tests install a scripted one.
+    app.dependency_overrides[get_chat_model] = lambda: None
     return app
 
 

@@ -70,7 +70,27 @@ class EmbeddingSettings(BaseSettings):
     embedding_cache_dir: Path | None = None
 
 
-class Settings(DatabaseSettings, EmbeddingSettings):
+class LlmSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    # Gemini answers first and Groq takes over when it is busy or down. With neither key
+    # set, chats still work but the agent replies that it is switched off.
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = "gemini-3.5-flash-lite"
+    groq_api_key: SecretStr | None = None
+    groq_model: str = "llama-3.3-70b-versatile"
+    llm_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    # The free LLM quotas are shared by every user, so each user gets a daily share.
+    agent_turns_per_user_per_day: int = Field(default=40, ge=1)
+
+    @field_validator("gemini_api_key", "groq_api_key", mode="before")
+    @classmethod
+    def _blank_key_means_none(cls, value: object) -> object:
+        # `GEMINI_API_KEY=` in a .env file means "not set", not an empty key.
+        return None if isinstance(value, str) and not value.strip() else value
+
+
+class Settings(DatabaseSettings, EmbeddingSettings, LlmSettings):
     environment: Environment = Environment.DEVELOPMENT
     log_level: str = "INFO"
     log_format: LogFormat = LogFormat.TEXT

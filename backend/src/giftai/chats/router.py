@@ -2,6 +2,8 @@ import uuid
 
 from fastapi import APIRouter, status
 
+from giftai.agent.dependencies import GiftAgentServiceDep
+from giftai.agent.schemas import ChatTurn, RecommendationList
 from giftai.auth.dependencies import CurrentUser
 from giftai.chats.dependencies import ChatServiceDep
 from giftai.chats.schemas import ChatCreate, ChatRead, ChatUpdate, MessageCreate, MessageRead
@@ -53,9 +55,19 @@ async def list_messages(
 @router.post(
     "/{chat_id}/messages",
     status_code=status.HTTP_201_CREATED,
-    summary="Send a message in a chat",
+    summary="Send a message; the gift assistant replies, with gift picks when it's ready",
 )
 async def send_message(
-    chat_id: uuid.UUID, data: MessageCreate, user: CurrentUser, service: ChatServiceDep
-) -> MessageRead:
-    return MessageRead.model_validate(await service.add_user_message(user, chat_id, data))
+    chat_id: uuid.UUID, data: MessageCreate, user: CurrentUser, agent: GiftAgentServiceDep
+) -> ChatTurn:
+    return await agent.reply(user, chat_id, data)
+
+
+@router.get(
+    "/{chat_id}/recommendations",
+    summary="The gift picks from the chat's latest suggestions, best first",
+)
+async def latest_recommendations(
+    chat_id: uuid.UUID, user: CurrentUser, agent: GiftAgentServiceDep
+) -> RecommendationList:
+    return await agent.latest_recommendations(user, chat_id)
