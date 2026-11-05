@@ -79,7 +79,7 @@ Each turn is a small LangGraph graph (`agent/graph.py`):
 `GET /api/v1/chats/{id}/recommendations` returns the latest picks again, or the picks of
 the replies named by `message_id` (repeat it, up to 50), so a reopened chat can show each
 reply's gifts under it. Every pick carries its `message_id`, the user's `rating` and the
-product's `availability`. A turn's message
+product's `availability`; `add_all_to_cart_urls` has one cart link per reply. A turn's message
 and reply are saved together only when the assistant has answered, so if both LLMs are
 busy (503) nothing is half-saved and the user just sends again.
 

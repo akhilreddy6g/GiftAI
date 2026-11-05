@@ -152,10 +152,16 @@ class GiftAgentService:
             await self._session.scalars(select(GiftingRule).where(GiftingRule.id.in_(rule_ids)))
         )
         items = await self._read_all(user, recommendations, rules)
-        # Several replies' picks don't make one cart.
-        latest_only = len({item.message_id for item in items}) <= 1
+        by_reply: dict[uuid.UUID, list[RecommendationRead]] = {}
+        for item in items:
+            by_reply.setdefault(item.message_id, []).append(item)
         return RecommendationList(
-            items=items, add_all_to_cart_url=_cart_url(items) if latest_only else None
+            items=items,
+            add_all_to_cart_urls={
+                message_id: add_to_cart_url([item.product.asin for item in picks])
+                for message_id, picks in by_reply.items()
+            },
+            order_by=order_by_date(chat.occasion_date, datetime.now(UTC).date()),
         )
 
     async def _read_all(

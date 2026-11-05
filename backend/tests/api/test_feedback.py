@@ -57,12 +57,16 @@ async def test_picks_can_be_read_back_per_reply(agent: AgentClient, user: Header
     assert [p["message_id"] for p in both["items"]] == [first_reply] * len(
         first["recommendations"]
     ) + [second_reply] * len(second["recommendations"])
-    # Picks from different replies don't make one cart.
-    assert both["add_all_to_cart_url"] is None
+    # One cart link per reply, each matching what the reply itself offered.
+    assert both["add_all_to_cart_urls"] == {
+        first_reply: first["add_all_to_cart_url"],
+        second_reply: second["add_all_to_cart_url"],
+    }
 
     one = await picks_in(agent.client, user, chat_id, first_reply)
     assert [p["id"] for p in one["items"]] == [p["id"] for p in first["recommendations"]]
-    assert one["add_all_to_cart_url"] == first["add_all_to_cart_url"]
+    assert one["add_all_to_cart_urls"] == {first_reply: first["add_all_to_cart_url"]}
+    assert one["order_by"] == first["order_by"]
 
 
 async def test_thumbs_up_down_and_clear_are_kept_and_logged(

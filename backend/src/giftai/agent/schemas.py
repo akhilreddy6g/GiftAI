@@ -32,8 +32,10 @@ class RecommendationRead(BaseModel):
 
 class RecommendationList(BaseModel):
     items: list[RecommendationRead]
-    # Adds every pick to the user's Amazon cart at once.
-    add_all_to_cart_url: str | None
+    # Per reply, a link that adds all of that reply's picks to the user's Amazon cart.
+    add_all_to_cart_urls: dict[uuid.UUID, str]
+    # Worked back from the occasion date, allowing a week for shipping.
+    order_by: date | None
 
 
 class ChatTurn(BaseModel):
