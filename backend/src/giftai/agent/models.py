@@ -3,12 +3,14 @@ from datetime import date, datetime
 
 from sqlalchemy import (
     ARRAY,
+    CheckConstraint,
     Date,
     DateTime,
     Float,
     ForeignKey,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -27,6 +29,7 @@ class Recommendation(UuidPrimaryKey, Base):
     __table_args__ = (
         UniqueConstraint("message_id", "rank"),
         Index("ix_recommendations_chat_id_created_at", "chat_id", "created_at"),
+        CheckConstraint("rating IN (-1, 1)", name="rating_is_up_or_down"),
     )
 
     chat_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("chats.id", ondelete="CASCADE"))
@@ -39,6 +42,9 @@ class Recommendation(UuidPrimaryKey, Base):
     # Rules are retired rather than deleted too, so the ids keep resolving.
     rule_ids: Mapped[list[str]] = mapped_column(ARRAY(String(10)), default=list)
     score: Mapped[float] = mapped_column(Float)
+    # The user's thumbs: 1 up, -1 down, null not rated. Each change is also logged as a
+    # feedback event.
+    rating: Mapped[int | None] = mapped_column(SmallInteger)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     product: Mapped[Product] = relationship(lazy="joined")

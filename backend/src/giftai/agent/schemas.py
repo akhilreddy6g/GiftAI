@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from giftai.catalog.schemas import ProductRead
 from giftai.chats.schemas import ChatRead, MessageRead
+from giftai.feedback.schemas import ProductAvailability, Rating
 from giftai.rulebook.models import RuleKind
 
 
@@ -16,17 +17,25 @@ class CitedRule(BaseModel):
 
 class RecommendationRead(BaseModel):
     id: uuid.UUID
+    # The assistant reply that presented it.
+    message_id: uuid.UUID
     rank: int
     product: ProductRead
     reason: str
     rules: list[CitedRule]
     add_to_cart_url: str
+    # The user's thumbs up or down, if any.
+    rating: Rating | None
+    # Whether people still find it on Amazon, from their votes.
+    availability: ProductAvailability
 
 
 class RecommendationList(BaseModel):
     items: list[RecommendationRead]
-    # Adds every pick to the user's Amazon cart at once.
-    add_all_to_cart_url: str | None
+    # Per reply, a link that adds all of that reply's picks to the user's Amazon cart.
+    add_all_to_cart_urls: dict[uuid.UUID, str]
+    # Worked back from the occasion date, allowing a week for shipping.
+    order_by: date | None
 
 
 class ChatTurn(BaseModel):

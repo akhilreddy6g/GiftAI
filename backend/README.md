@@ -76,7 +76,10 @@ Each turn is a small LangGraph graph (`agent/graph.py`):
    apply, says why each suits the person and which rules it follows. Products and rule
    ids are checked against what was offered; anything else is dropped.
 
-`GET /api/v1/chats/{id}/recommendations` returns the latest picks again. A turn's message
+`GET /api/v1/chats/{id}/recommendations` returns the latest picks again, or the picks of
+the replies named by `message_id` (repeat it, up to 50), so a reopened chat can show each
+reply's gifts under it. Every pick carries its `message_id`, the user's `rating` and the
+product's `availability`; `add_all_to_cart_urls` has one cart link per reply. A turn's message
 and reply are saved together only when the assistant has answered, so if both LLMs are
 busy (503) nothing is half-saved and the user just sends again.
 
@@ -95,6 +98,18 @@ replies that it is switched off. Each user gets `AGENT_TURNS_PER_USER_PER_DAY` r
 
 Every product carries `amazon_url` and `amazon_search_url` (a search for its name, for when
 the listing has gone). Prices are 2023 prices from the dataset, so `price_2023` says so.
+
+## Feedback and availability
+
+| Endpoint                                     | What it does |
+|----------------------------------------------|--------------|
+| `POST /api/v1/feedback/events`               | Logs `clicked` or `added_to_cart` for 1 to 10 of the user's picks (204). All or nothing: any pick that isn't theirs gives 404 |
+| `PUT /api/v1/recommendations/{id}/rating`    | Thumbs `up`, `down` or `null` to clear (204). Each change is logged as an event |
+| `PUT /api/v1/products/{asin}/availability`   | The user's answer to "Did you find it on Amazon?" (`found`), one vote per user and product; returns the product's availability |
+
+A product's availability is `verified` when most voters found it, `likely_gone` when most
+didn't, and `unverified` on a tie or with no votes. Likely gone products still appear, but
+their ranking score is quartered (`feedback/availability.py`), so they sink below the rest.
 
 ## Gifting rules
 

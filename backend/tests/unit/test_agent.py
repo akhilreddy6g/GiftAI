@@ -26,6 +26,7 @@ from giftai.catalog.links import add_to_cart_url
 from giftai.catalog.models import Product
 from giftai.chats.models import Chat
 from giftai.core.config import LlmSettings
+from giftai.feedback.availability import AvailabilityStatus, VoteCounts
 from giftai.gifting import Occasion, Relationship
 from giftai.llm.base import LlmMessage, LlmUnavailableError
 from giftai.llm.fallback import FallbackChatModel
@@ -233,6 +234,30 @@ def test_products_already_shown_drop_back() -> None:
 
     assert [c.product.asin for c in shortlist] == ["B000SECOND", "B000FIRST1"]
     assert shortlist[0].score - shortlist[1].score < ALREADY_SHOWN_PENALTY
+
+
+def test_products_people_could_not_find_sink_but_stay() -> None:
+    gone, available = product("B0000GONE1"), product("B000THERE1")
+    likely_gone = Candidate(gone, 0.9, availability=AvailabilityStatus.LIKELY_GONE)
+
+    shortlist = rank([likely_gone, Candidate(available, 0.6)], (None, None), already_shown=set())
+
+    assert [c.product.asin for c in shortlist] == ["B000THERE1", "B0000GONE1"]
+
+
+@pytest.mark.parametrize(
+    ("found", "not_found", "status"),
+    [
+        (0, 0, AvailabilityStatus.UNVERIFIED),
+        (2, 1, AvailabilityStatus.VERIFIED),
+        (1, 2, AvailabilityStatus.LIKELY_GONE),
+        (1, 1, AvailabilityStatus.UNVERIFIED),
+    ],
+)
+def test_the_majority_of_votes_sets_availability(
+    found: int, not_found: int, status: AvailabilityStatus
+) -> None:
+    assert VoteCounts(found, not_found).status is status
 
 
 # Picks and the reply

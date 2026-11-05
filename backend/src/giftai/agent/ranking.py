@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from giftai.catalog.models import Product
+from giftai.feedback.availability import RANKING_WEIGHT, AvailabilityStatus
 
 # How much each feature counts. Meaning comes first (a perfect-fit price on the wrong
 # kind of product is still the wrong gift), then staying near the budget.
@@ -31,6 +32,8 @@ class Candidate:
     # Cosine similarity to the best-matching search, or derived from a neighbor's.
     relevance: float
     found_by: set[str] = field(default_factory=set)
+    # From users' found / not-found votes; likely-gone products sink.
+    availability: AvailabilityStatus = AvailabilityStatus.UNVERIFIED
     score: float = 0.0
     features: dict[str, float] = field(default_factory=dict)
 
@@ -68,6 +71,7 @@ def rank(
     for candidate in candidates:
         candidate.features = features(candidate, low, high)
         candidate.score = sum(WEIGHTS[name] * value for name, value in candidate.features.items())
+        candidate.score *= RANKING_WEIGHT[candidate.availability]
         if candidate.product.asin in already_shown:
             candidate.score -= ALREADY_SHOWN_PENALTY
 

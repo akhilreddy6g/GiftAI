@@ -6,6 +6,7 @@ so a failed turn (the LLMs busy) leaves nothing half-done and the user simply re
 
 import logging
 import uuid
+from collections.abc import Collection
 from datetime import UTC, datetime, time, timedelta
 from typing import cast
 
@@ -33,6 +34,9 @@ from giftai.chats.service import MAX_MESSAGES_PER_CHAT, ChatService
 from giftai.chats.titles import describe_chat
 from giftai.core.errors import LimitReachedError, RateLimitedError, ServiceUnavailableError
 from giftai.embeddings.base import TextEmbedder
+from giftai.feedback.repository import AvailabilityRepository
+from giftai.feedback.schemas import ProductAvailability
+from giftai.feedback.service import FeedbackService, rating_name
 from giftai.llm.base import ChatModel, LlmMessage, LlmUnavailableError
 from giftai.recipients.models import Recipient
 from giftai.rulebook.models import GiftingRule
@@ -66,6 +70,7 @@ class GiftAgentService:
         self._recommendations = RecommendationRepository(session)
         self._usage = AgentUsageRepository(session)
         self._rules = RulebookRepository(session)
+        self._feedback = FeedbackService(session)
 
     async def reply(self, user: User, chat_id: uuid.UUID, data: MessageCreate) -> ChatTurn:
         chat = await self._chats.get(user, chat_id)
@@ -75,7 +80,7 @@ class GiftAgentService:
 
         now = datetime.now(UTC)
         if self._model is None:
-            return await self._save_turn(chat, data.content, AGENT_OFF_REPLY, [], [], now)
+            return await self._save_turn(user, chat, data.content, AGENT_OFF_REPLY, [], [], now)
 
         today = now.date()
         if await self._usage.turns_on(user.id, today) >= self._turns_per_day:
@@ -104,7 +109,11 @@ class GiftAgentService:
 
         agent = build_agent(
             AgentDependencies(
-                self._model, ProductRepository(self._session), self._embedder, self._rules
+                self._model,
+                ProductRepository(self._session),
+                self._embedder,
+                self._rules,
+                AvailabilityRepository(self._session),
             )
         )
         try:
@@ -119,6 +128,7 @@ class GiftAgentService:
         chat.agent_questions_asked = result.get("questions_asked", chat.agent_questions_asked)
         await self._usage.record_turn(user.id, today)
         return await self._save_turn(
+            user,
             chat,
             data.content,
             result["reply"],
@@ -127,15 +137,41 @@ class GiftAgentService:
             now,
         )
 
-    async def latest_recommendations(self, user: User, chat_id: uuid.UUID) -> RecommendationList:
+    async def recommendations(
+        self, user: User, chat_id: uuid.UUID, message_ids: Collection[uuid.UUID] = ()
+    ) -> RecommendationList:
+        """The picks presented by the given replies, or by the latest suggestion reply."""
         chat = await self._chats.get(user, chat_id)
-        recommendations = await self._recommendations.latest_for_chat(chat.id)
+        recommendations = (
+            await self._recommendations.for_messages(chat.id, message_ids)
+            if message_ids
+            else await self._recommendations.latest_for_chat(chat.id)
+        )
         rule_ids = {rule_id for r in recommendations for rule_id in r.rule_ids}
         rules = list(
             await self._session.scalars(select(GiftingRule).where(GiftingRule.id.in_(rule_ids)))
         )
-        items = [_read(r, {rule.id: rule for rule in rules}) for r in recommendations]
-        return RecommendationList(items=items, add_all_to_cart_url=_cart_url(items))
+        items = await self._read_all(user, recommendations, rules)
+        by_reply: dict[uuid.UUID, list[RecommendationRead]] = {}
+        for item in items:
+            by_reply.setdefault(item.message_id, []).append(item)
+        return RecommendationList(
+            items=items,
+            add_all_to_cart_urls={
+                message_id: add_to_cart_url([item.product.asin for item in picks])
+                for message_id, picks in by_reply.items()
+            },
+            order_by=order_by_date(chat.occasion_date, datetime.now(UTC).date()),
+        )
+
+    async def _read_all(
+        self, user: User, recommendations: list[Recommendation], rules: list[GiftingRule]
+    ) -> list[RecommendationRead]:
+        availability = await self._feedback.availability(
+            user, {r.product_asin for r in recommendations}
+        )
+        rules_by_id = {rule.id: rule for rule in rules}
+        return [_read(r, rules_by_id, availability[r.product_asin]) for r in recommendations]
 
     async def _recipient(self, chat: Chat) -> Recipient | None:
         if chat.recipient_id is None:
@@ -144,6 +180,7 @@ class GiftAgentService:
 
     async def _save_turn(
         self,
+        user: User,
         chat: Chat,
         content: str,
         reply_text: str,
@@ -181,8 +218,7 @@ class GiftAgentService:
         chat.updated_at = now
         await self._session.commit()
 
-        rules_by_id = {rule.id: rule for rule in rules}
-        items = [_read(r, rules_by_id) for r in recommendations]
+        items = await self._read_all(user, recommendations, rules)
         return ChatTurn(
             message=MessageRead.model_validate(message),
             reply=MessageRead.model_validate(reply),
@@ -228,9 +264,14 @@ def apply_profile(chat: Chat, profile: GiftProfile, recipient: Recipient | None)
         chat.title = describe_chat(name, chat.occasion, chat.occasion_date)
 
 
-def _read(recommendation: Recommendation, rules: dict[str, GiftingRule]) -> RecommendationRead:
+def _read(
+    recommendation: Recommendation,
+    rules: dict[str, GiftingRule],
+    availability: ProductAvailability,
+) -> RecommendationRead:
     return RecommendationRead(
         id=recommendation.id,
+        message_id=recommendation.message_id,
         rank=recommendation.rank,
         product=ProductRead.model_validate(recommendation.product),
         reason=recommendation.reason,
@@ -240,6 +281,8 @@ def _read(recommendation: Recommendation, rules: dict[str, GiftingRule]) -> Reco
             if (rule := rules.get(rule_id)) is not None
         ],
         add_to_cart_url=add_to_cart_url([recommendation.product_asin]),
+        rating=rating_name(recommendation.rating),
+        availability=availability,
     )
 
 

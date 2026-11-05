@@ -7,13 +7,16 @@ stores data adds its ``models`` module here.
 from giftai.agent.models import AgentUsage, Recommendation
 from giftai.catalog.models import Product, ProductNeighbor
 from giftai.chats.models import Chat, Message
+from giftai.feedback.models import AvailabilityVote, FeedbackEvent
 from giftai.recipients.models import Recipient
 from giftai.rulebook.models import GiftingRule, KnowledgeSource, RuleSource
 from giftai.users.models import User
 
 __all__ = [
     "AgentUsage",
+    "AvailabilityVote",
     "Chat",
+    "FeedbackEvent",
     "GiftingRule",
     "KnowledgeSource",
     "Message",
