@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Collection
 from datetime import date
 
 from sqlalchemy import select
@@ -20,6 +21,17 @@ class RecommendationRepository:
             select(Recommendation.product_asin).where(Recommendation.chat_id == chat_id)
         )
         return set(rows.all())
+
+    async def for_messages(
+        self, chat_id: uuid.UUID, message_ids: Collection[uuid.UUID]
+    ) -> list[Recommendation]:
+        """The picks presented by these replies in this chat, oldest reply first."""
+        rows = await self._session.scalars(
+            select(Recommendation)
+            .where(Recommendation.chat_id == chat_id, Recommendation.message_id.in_(message_ids))
+            .order_by(Recommendation.created_at, Recommendation.message_id, Recommendation.rank)
+        )
+        return list(rows.all())
 
     async def latest_for_chat(self, chat_id: uuid.UUID) -> list[Recommendation]:
         """The picks from the chat's most recent suggestion reply, best first."""
