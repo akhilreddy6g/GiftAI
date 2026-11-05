@@ -66,10 +66,27 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The gift picks from the chat's latest suggestions, best first */
-    get: operations['latest_recommendations_api_v1_chats__chat_id__recommendations_get'];
+    /** Gift picks: from the given replies, or from the chat's latest suggestions */
+    get: operations['list_recommendations_api_v1_chats__chat_id__recommendations_get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/feedback/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record that gift ideas were opened on Amazon or added to the cart */
+    post: operations['record_feedback_api_v1_feedback_events_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -145,6 +162,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/products/{asin}/availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Say whether the product could still be found on Amazon; replaces an earlier vote */
+    put: operations['vote_availability_api_v1_products__asin__availability_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/recipients': {
     parameters: {
       query?: never;
@@ -180,6 +214,23 @@ export interface paths {
     head?: never;
     /** Change some of a person's details */
     patch: operations['update_recipient_api_v1_recipients__recipient_id__patch'];
+    trace?: never;
+  };
+  '/api/v1/recommendations/{recommendation_id}/rating': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Thumbs up or down on a gift idea, or null to clear it */
+    put: operations['rate_recommendation_api_v1_recommendations__recommendation_id__rating_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   '/api/v1/rules': {
@@ -254,6 +305,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * AvailabilityStatus
+     * @enum {string}
+     */
+    AvailabilityStatus: 'verified' | 'unverified' | 'likely_gone';
+    /** AvailabilityVoteCreate */
+    AvailabilityVoteCreate: {
+      /** Found */
+      found: boolean;
+    };
     /**
      * ChatCreate
      * @description Every field is optional: a chat can start empty and the agent fills in details.
@@ -360,6 +421,16 @@ export interface components {
     ErrorResponse: {
       error: components['schemas']['ErrorBody'];
     };
+    /** FeedbackEventCreate */
+    FeedbackEventCreate: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'clicked' | 'added_to_cart';
+      /** Recommendation Ids */
+      recommendation_ids: string[];
+    };
     /** LivenessReport */
     LivenessReport: {
       status: components['schemas']['CheckStatus'];
@@ -429,6 +500,16 @@ export interface components {
       /** Next Cursor */
       next_cursor: string | null;
     };
+    /** ProductAvailability */
+    ProductAvailability: {
+      /** Found Votes */
+      found_votes: number;
+      /** Not Found Votes */
+      not_found_votes: number;
+      status: components['schemas']['AvailabilityStatus'];
+      /** Your Vote */
+      your_vote: boolean | null;
+    };
     /** ProductRead */
     ProductRead: {
       /**
@@ -458,6 +539,11 @@ export interface components {
       short_description: string | null;
       /** Title */
       title: string;
+    };
+    /** RatingUpdate */
+    RatingUpdate: {
+      /** Rating */
+      rating: ('up' | 'down') | null;
     };
     /** ReadinessReport */
     ReadinessReport: {
@@ -515,23 +601,35 @@ export interface components {
     };
     /** RecommendationList */
     RecommendationList: {
-      /** Add All To Cart Url */
-      add_all_to_cart_url: string | null;
+      /** Add All To Cart Urls */
+      add_all_to_cart_urls: {
+        [key: string]: string;
+      };
       /** Items */
       items: components['schemas']['RecommendationRead'][];
+      /** Order By */
+      order_by: string | null;
     };
     /** RecommendationRead */
     RecommendationRead: {
       /** Add To Cart Url */
       add_to_cart_url: string;
+      availability: components['schemas']['ProductAvailability'];
       /**
        * Id
        * Format: uuid
        */
       id: string;
+      /**
+       * Message Id
+       * Format: uuid
+       */
+      message_id: string;
       product: components['schemas']['ProductRead'];
       /** Rank */
       rank: number;
+      /** Rating */
+      rating: ('up' | 'down') | null;
       /** Reason */
       reason: string;
       /** Rules */
@@ -870,9 +968,12 @@ export interface operations {
       };
     };
   };
-  latest_recommendations_api_v1_chats__chat_id__recommendations_get: {
+  list_recommendations_api_v1_chats__chat_id__recommendations_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Assistant replies whose picks to return */
+        message_id?: string[] | null;
+      };
       header?: never;
       path: {
         chat_id: string;
@@ -889,6 +990,37 @@ export interface operations {
         content: {
           'application/json': components['schemas']['RecommendationList'];
         };
+      };
+      /** @description Default Response */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  record_feedback_api_v1_feedback_events_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FeedbackEventCreate'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Default Response */
       default: {
@@ -1057,6 +1189,42 @@ export interface operations {
       };
     };
   };
+  vote_availability_api_v1_products__asin__availability_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Amazon product id (ASIN) */
+        asin: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AvailabilityVoteCreate'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProductAvailability'];
+        };
+      };
+      /** @description Default Response */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
   list_recipients_api_v1_recipients_get: {
     parameters: {
       query?: {
@@ -1205,6 +1373,39 @@ export interface operations {
         content: {
           'application/json': components['schemas']['RecipientRead'];
         };
+      };
+      /** @description Default Response */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  rate_recommendation_api_v1_recommendations__recommendation_id__rating_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        recommendation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RatingUpdate'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Default Response */
       default: {
