@@ -31,14 +31,16 @@ async def test_the_automatic_title_follows_changes_until_the_user_renames_it(
     url = f"/api/v1/chats/{chat['id']}"
 
     retitled = await database_client.patch(url, json={"occasion": "wedding"}, headers=alice)
-    assert retitled.json()["title"] == "wedding"
+    assert retitled.json()["title"] == "Wedding"
 
+    lowercase = await database_client.patch(url, json={"title": "jo & Sam"}, headers=alice)
+    assert lowercase.json()["title"] == "Jo & Sam"
     renamed = await database_client.patch(url, json={"title": "Jo & Sam"}, headers=alice)
     kept = await database_client.patch(url, json={"occasion": "anniversary"}, headers=alice)
     assert renamed.json()["title"] == kept.json()["title"] == "Jo & Sam"
 
     reset = await database_client.patch(url, json={"title": None}, headers=alice)
-    assert reset.json()["title"] == "anniversary"
+    assert reset.json()["title"] == "Anniversary"
     assert reset.json()["title_is_custom"] is False
 
 

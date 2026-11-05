@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from giftai.chats.models import Chat, Message
 from giftai.chats.repository import ChatRepository, MessageRepository
 from giftai.chats.schemas import ChatCreate, ChatUpdate
-from giftai.chats.titles import describe_chat
+from giftai.chats.titles import describe_chat, sentence_case
 from giftai.core.errors import InvalidRequestError, LimitReachedError, NotFoundError
 from giftai.core.pagination import PageRequest, PageResult
 from giftai.recipients.models import Recipient
@@ -45,7 +45,9 @@ class ChatService:
             title_is_custom=data.title is not None,
             **data.model_dump(exclude={"title"}),
         )
-        chat.title = data.title or self._automatic_title(chat, recipient)
+        chat.title = (
+            sentence_case(data.title) if data.title else self._automatic_title(chat, recipient)
+        )
         self._chats.add(chat)
         await self._session.commit()
         await self._session.refresh(chat)
@@ -59,7 +61,7 @@ class ChatService:
             new_title = changes.pop("title")
             chat.title_is_custom = new_title is not None
             if new_title is not None:
-                chat.title = new_title
+                chat.title = sentence_case(new_title)
         for field, value in changes.items():
             setattr(chat, field, value)
 

@@ -17,4 +17,10 @@ def describe_chat(
         parts.append(occasion.value.replace("_", " "))
     if occasion_date:
         parts.append(f"{occasion_date:%b} {occasion_date.day}")
-    return ", ".join(parts) or UNTITLED_CHAT
+    return sentence_case(", ".join(parts)) or UNTITLED_CHAT
+
+
+def sentence_case(title: str) -> str:
+    """Capitalizes the first letter and leaves the rest alone, so names and brands keep
+    their own capitals ("mom, birthday" becomes "Mom, birthday"; "iPad case" stays)."""
+    return title[:1].upper() + title[1:]
