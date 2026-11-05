@@ -1,0 +1,101 @@
+@if (chatError(); as error) {
+  <div class="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-10">
+    @if (error.status === 404) {
+      <h1 class="text-2xl font-semibold">We couldn't find that chat</h1>
+      <p class="mt-2 text-ink-muted">It may have been deleted. Your other chats are in the list.</p>
+    } @else {
+      <h1 class="text-2xl font-semibold">This chat didn't load</h1>
+      <p class="mt-2 text-ink-muted" role="alert">{{ error.message }}</p>
+      <button type="button" class="btn btn-secondary mt-6 self-start" (click)="retry()">
+        Try again
+      </button>
+    }
+  </div>
+} @else {
+  <header class="shrink-0 border-b border-line px-4 py-3">
+    <div class="mx-auto flex w-full max-w-3xl items-start gap-2">
+      @if (renaming()) {
+        <app-rename-form
+          class="flex-1"
+          [title]="chat()?.title ?? ''"
+          [save]="saveTitle"
+          (closed)="closeRename()"
+        />
+      } @else {
+        <div class="min-w-0 flex-1 py-1">
+          <h1 #heading tabindex="-1" class="truncate text-lg font-semibold">
+            {{ chat()?.title ?? 'Loading chat…' }}
+          </h1>
+          @if (details().length) {
+            <ul class="mt-1 flex flex-wrap gap-1.5" aria-label="Gift details">
+              @for (detail of details(); track detail) {
+                <li class="rounded-full bg-surface-muted px-2.5 py-0.5 text-xs text-ink-muted">
+                  {{ detail }}
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        @if (chat()) {
+          <button type="button" class="icon-btn" aria-label="Rename chat" (click)="startRename()">
+            <app-icon name="pencil" />
+          </button>
+          <button
+            type="button"
+            class="icon-btn hover:text-danger"
+            aria-label="Delete chat"
+            (click)="askToDelete()"
+          >
+            <app-icon name="trash" />
+          </button>
+        }
+      }
+    </div>
+  </header>
+
+  <app-message-list
+    class="min-h-0 flex-1"
+    [messages]="conversation.messages()"
+    [loading]="conversation.isLoading()"
+    [loadError]="conversation.loadError()?.message ?? null"
+    [hasOlder]="conversation.hasOlder()"
+    [loadingOlder]="conversation.isLoadingOlder()"
+    [thinking]="conversation.isSending()"
+    (loadOlder)="conversation.loadOlder()"
+    (retry)="retry()"
+  />
+
+  <!-- Announces each new reply to screen readers; the thread itself stays quiet. -->
+  <div class="sr-only" aria-live="polite" aria-atomic="true">
+    @if (conversation.latestReply(); as reply) {
+      GiftAI replied: {{ reply.content }}
+    }
+  </div>
+
+  <div class="shrink-0 bg-canvas px-4 pt-2 pb-4">
+    <div class="mx-auto w-full max-w-3xl">
+      @if (sendError(); as message) {
+        <p class="alert-error mb-3" role="alert">{{ message }}</p>
+      }
+      <app-composer
+        inputId="chat-message"
+        placeholder="Reply to GiftAI"
+        [busy]="conversation.isSending() || conversation.isLoading()"
+        (send)="sendMessage($event)"
+      />
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  #deleteDialog
+  id="delete-chat"
+  heading="Delete this chat?"
+  message="The conversation and its gift ideas will be removed for good."
+  confirmLabel="Delete chat"
+  busyLabel="Deleting…"
+  [danger]="true"
+  [busy]="deleting()"
+  [error]="deleteError()"
+  (confirmed)="deleteChat()"
+/>

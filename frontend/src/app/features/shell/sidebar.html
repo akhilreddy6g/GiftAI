@@ -1,0 +1,113 @@
+<div class="flex h-14 shrink-0 items-center justify-between gap-2 px-4">
+  <a
+    routerLink="/"
+    class="flex items-center gap-2 rounded-lg font-semibold"
+    (click)="closeRequested.emit()"
+  >
+    <span class="flex size-8 items-center justify-center rounded-lg bg-accent text-accent-ink">
+      <app-icon name="gift" [size]="18" />
+    </span>
+    GiftAI
+  </a>
+  @if (inDrawer()) {
+    <button type="button" class="icon-btn" aria-label="Close chats" (click)="closeRequested.emit()">
+      <app-icon name="close" />
+    </button>
+  }
+</div>
+
+<div class="px-3 pb-3">
+  <!-- A new chat starts on the home page: its first message creates the chat. -->
+  <a
+    routerLink="/"
+    class="btn btn-primary w-full"
+    [routerLinkActiveOptions]="{ exact: true }"
+    routerLinkActive
+    ariaCurrentWhenActive="page"
+    (click)="closeRequested.emit()"
+  >
+    <app-icon name="plus" [size]="18" />
+    New chat
+  </a>
+</div>
+
+<nav class="min-h-0 flex-1 overflow-y-auto px-3 pb-3" aria-labelledby="chats-heading">
+  <h2
+    id="chats-heading"
+    class="px-2 pt-2 pb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase"
+  >
+    Your chats
+  </h2>
+
+  @if (store.isLoading()) {
+    <p class="px-2 py-3 text-sm text-ink-muted" role="status">Loading your chats…</p>
+  } @else if (store.loadError() && !store.isLoaded()) {
+    <div class="px-2 py-3 text-sm">
+      <p class="text-ink-muted" role="alert">{{ store.loadError() }}</p>
+      <button type="button" class="link mt-2" (click)="retry()">Try again</button>
+    </div>
+  } @else if (store.chats().length === 0) {
+    <p class="px-2 py-3 text-sm text-ink-muted">
+      No chats yet. Start one and tell GiftAI who you're shopping for.
+    </p>
+  } @else {
+    <ul class="space-y-0.5">
+      @for (chat of store.chats(); track chat.id) {
+        <li>
+          <a
+            [routerLink]="['/chats', chat.id]"
+            routerLinkActive="bg-surface-muted font-medium"
+            ariaCurrentWhenActive="page"
+            class="flex min-h-11 items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-surface-muted"
+            (click)="closeRequested.emit()"
+          >
+            <app-icon name="chat" [size]="18" class="text-ink-muted" />
+            <span class="min-w-0 flex-1 truncate">{{ chat.title }}</span>
+            <span class="shrink-0 text-xs text-ink-muted">{{ formatDate(chat.updated_at) }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+    @if (store.hasMore()) {
+      <button
+        type="button"
+        class="btn btn-ghost mt-2 w-full"
+        [disabled]="store.isLoadingMore()"
+        (click)="store.loadMore()"
+      >
+        {{ store.isLoadingMore() ? 'Loading…' : 'Show older chats' }}
+      </button>
+    }
+  }
+</nav>
+
+<section class="shrink-0 space-y-3 border-t border-line p-3" aria-label="Account">
+  <app-theme-picker />
+  @if (auth.email(); as email) {
+    <p class="truncate px-1 text-sm text-ink-muted" [title]="email">
+      Signed in as <span class="font-medium text-ink">{{ email }}</span>
+    </p>
+  }
+  <div class="flex gap-2">
+    <button type="button" class="btn btn-secondary flex-1" (click)="signOut()">
+      <app-icon name="logout" [size]="18" />
+      Sign out
+    </button>
+    <button type="button" class="btn btn-ghost text-danger" (click)="askToDeleteAccount()">
+      Delete account
+    </button>
+  </div>
+</section>
+
+<app-confirm-dialog
+  #deleteAccountDialog
+  id="delete-account"
+  heading="Delete your account?"
+  message="Your chats and saved people will no longer be shown, and you'll be signed out. Signing in again starts a fresh, empty account."
+  confirmLabel="Delete account"
+  busyLabel="Deleting…"
+  [danger]="true"
+  [busy]="deletingAccount()"
+  [error]="deleteAccountError()"
+  (confirmed)="deleteAccount()"
+/>

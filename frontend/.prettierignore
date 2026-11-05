@@ -1,0 +1,8 @@
+node_modules
+dist
+.angular
+coverage
+.lighthouseci
+package-lock.json
+openapi.json
+src/app/core/config/app-config.values.ts

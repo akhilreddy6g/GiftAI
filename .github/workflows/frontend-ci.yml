@@ -1,0 +1,84 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    # Backend source too: a change to the API's shape must keep the frontend compiling.
+    paths: ["frontend/**", "backend/src/**", "backend/scripts/export_openapi.py", ".github/workflows/frontend-ci.yml"]
+  push:
+    branches: [main, backend-dev, frontend-dev]
+    paths: ["frontend/**", "backend/src/**", "backend/scripts/export_openapi.py", ".github/workflows/frontend-ci.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  checks:
+    name: Contract, lint, test, build and Lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: API types match the backend
+        # Regenerates the OpenAPI schema and the TypeScript types from the backend's code.
+        # A difference means the API changed: run `npm run api:sync` and commit the result.
+        env:
+          # Run with only the API's runtime dependencies, installed by the line below.
+          UV_NO_SYNC: "1"
+        run: |
+          (cd ../backend && uv sync --frozen --no-default-groups)
+          npm run api:sync
+          git diff --exit-code -- openapi.json src/app/core/api/schema.ts
+
+      - name: Lint (including accessibility rules)
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.16.0 autorun
+
+  image:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend

@@ -1,0 +1,158 @@
+@import 'tailwindcss';
+
+/* Dark mode follows the .dark class that ThemeService (and index.html, before paint) sets. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Color tokens. Every text and background pair below meets WCAG 2.2 AA contrast
+ * (4.5:1 for text, 3:1 for borders of controls and focus rings) in both themes.
+ */
+:root {
+  --canvas: #fbf8f4;
+  --surface: #ffffff;
+  --surface-muted: #f3ede6;
+  --line: #e2d8cd;
+  --line-strong: #8c7f74;
+  --ink: #1f1a17;
+  --ink-muted: #5c524a;
+  --accent: #b0421a;
+  --accent-hover: #943716;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe8dd;
+  --accent-text: #9f3b17;
+  --danger: #b42318;
+  --danger-hover: #912018;
+  --danger-soft: #fdecea;
+  --success-soft: #e8f5ec;
+  --success-text: #1d6b3a;
+}
+
+.dark {
+  --canvas: #161210;
+  --surface: #201b18;
+  --surface-muted: #2a2420;
+  --line: #3b332e;
+  --line-strong: #8a7d73;
+  --ink: #f4eee9;
+  --ink-muted: #b9aea5;
+  --accent: #f0915f;
+  --accent-hover: #f5a77e;
+  --accent-ink: #1d120c;
+  --accent-soft: #3b2419;
+  --accent-text: #f4a57c;
+  --danger: #f97066;
+  --danger-hover: #fb8b83;
+  --danger-soft: #3a1d1a;
+  --success-soft: #16301f;
+  --success-text: #7fd39b;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-success-soft: var(--success-soft);
+  --color-success-text: var(--success-text);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+  }
+
+  /* One visible focus style for every interactive element (WCAG 2.4.7 and 2.4.13). */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-accent-ink hover:bg-accent-hover disabled:hover:bg-accent;
+  }
+
+  .btn-secondary {
+    @apply border border-line-strong bg-surface text-ink hover:bg-surface-muted;
+  }
+
+  .btn-ghost {
+    @apply text-ink hover:bg-surface-muted;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-white hover:bg-danger-hover dark:text-[#1d0f0d];
+  }
+
+  .icon-btn {
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+
+  .field-input {
+    @apply block min-h-11 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-base text-ink placeholder:text-ink-muted aria-invalid:border-danger;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-sm text-ink-muted;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-sm text-danger;
+  }
+
+  .link {
+    @apply font-medium text-accent-text underline underline-offset-2 hover:no-underline;
+  }
+
+  .alert-error {
+    @apply rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm text-ink;
+  }
+
+  .alert-success {
+    @apply rounded-lg border border-success-text/30 bg-success-soft px-4 py-3 text-sm text-ink;
+  }
+}

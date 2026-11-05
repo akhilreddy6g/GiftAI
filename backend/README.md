@@ -183,6 +183,12 @@ TOKEN=$(uv run python scripts/get_access_token.py you@example.com)
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/me
 ```
 
+## The API contract
+
+The frontend's TypeScript types are generated from this API's OpenAPI schema. After
+changing a request or response shape, regenerate them from `frontend/` with
+`npm run api:sync` and commit the result; CI fails while they are out of date.
+
 ## Working on it without Docker
 
 Requires [uv](https://docs.astral.sh/uv/) and a Postgres with pgvector (the Compose `db`

@@ -3,6 +3,7 @@
 # db       Postgres 16 with pgvector, data kept in a named volume
 # migrate  applies Alembic migrations, then exits; the backend waits for it
 # backend  the FastAPI app on http://localhost:8000 (docs at /docs)
+# frontend the Angular app on http://localhost:4200, built with the .env Supabase settings
 
 name: giftai
 
@@ -50,6 +51,18 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        GIFTAI_API_URL: http://localhost:${BACKEND_PORT:-8000}
+        SUPABASE_URL: ${SUPABASE_URL:-}
+        SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    ports:
+      - "${FRONTEND_PORT:-4200}:8080"
+    depends_on:
+      - backend
 
 volumes:
   db-data:
