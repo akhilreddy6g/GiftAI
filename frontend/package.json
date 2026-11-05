@@ -1,0 +1,61 @@
+{
+  "name": "giftai-frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "config": "node scripts/write-config.mjs",
+    "prestart": "npm run config",
+    "start": "ng serve",
+    "prebuild": "npm run config",
+    "build": "ng build",
+    "pretest": "npm run config",
+    "test": "ng test --watch=false",
+    "test:watch": "ng test",
+    "prelint": "npm run config",
+    "lint": "ng lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "api:schema": "cd ../backend && uv run python scripts/export_openapi.py ../frontend/openapi.json",
+    "api:types": "openapi-typescript openapi.json --output src/app/core/api/schema.ts && prettier --write src/app/core/api/schema.ts",
+    "api:sync": "npm run api:schema && npm run api:types"
+  },
+  "private": true,
+  "packageManager": "npm@10.9.9",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@supabase/auth-js": "^2.119.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.6",
+    "@angular/cli": "^22.2.6",
+    "@angular/compiler-cli": "^22.2.0",
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/postcss": "^4.3.4",
+    "angular-eslint": "22.6.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^30.0.0",
+    "openapi-typescript": "^7.13.0",
+    "postcss": "^8.5.32",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.3.4",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "8.71.0",
+    "vitest": "^5.0.0"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

@@ -1,6 +1,6 @@
 """Sign in to Supabase with an email and password and print the access token.
 
-Until the frontend exists, this is how to call the API by hand:
+To call the API by hand, outside the app:
 
     SUPABASE_URL=https://<project>.supabase.co SUPABASE_ANON_KEY=<publishable key> \
         uv run python scripts/get_access_token.py you@example.com

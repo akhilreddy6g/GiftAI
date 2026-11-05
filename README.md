@@ -12,7 +12,7 @@ guided by a gifting rulebook distilled from books and research on gift giving.
 
 ```
 backend/     FastAPI service, migrations, catalog pipeline, tests   (see backend/README.md)
-frontend/    Angular app                                  (coming in a later milestone)
+frontend/    Angular app: sign-in, chats with the gift assistant    (see frontend/README.md)
 .github/     CI workflows
 ```
 
@@ -25,8 +25,10 @@ cp .env.example .env      # then set SUPABASE_URL and SUPABASE_ANON_KEY
 docker compose up --build
 ```
 
-This starts Postgres with pgvector, applies the migrations, and serves the API on
-http://localhost:8000. Check it with:
+This starts Postgres with pgvector, applies the migrations, serves the API on
+http://localhost:8000 and the app on http://localhost:4200. Sign-in needs two one-time
+settings in the Supabase dashboard; see "Setting up sign-in" in the
+[frontend README](frontend/README.md). Check the API with:
 
 ```bash
 curl http://localhost:8000/health/ready
@@ -35,8 +37,9 @@ curl http://localhost:8000/health/ready
 
 Interactive API docs are at http://localhost:8000/docs (disabled in production).
 
-Every `/api/v1` endpoint needs a Supabase access token. Until the frontend exists, get one
-for a test user with `backend/scripts/get_access_token.py` (see the backend README).
+Every `/api/v1` endpoint needs a Supabase access token. The app handles this; to call the
+API by hand, get one for a test user with `backend/scripts/get_access_token.py` (see the
+backend README).
 
 The database starts with no products. Product search works once you run the offline
 catalog pipeline, which downloads the dataset, picks giftable products, embeds them, learns
