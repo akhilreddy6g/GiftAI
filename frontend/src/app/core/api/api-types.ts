@@ -14,8 +14,15 @@ export type MessageRole = Schemas['MessageRole'];
 export type UserRead = Schemas['UserRead'];
 export type Occasion = Schemas['Occasion'];
 export type ErrorResponse = Schemas['ErrorResponse'];
+export type RecommendationRead = Schemas['RecommendationRead'];
+export type RecommendationList = Schemas['RecommendationList'];
+export type ProductRead = Schemas['ProductRead'];
+export type ProductAvailability = Schemas['ProductAvailability'];
+export type CitedRule = Schemas['CitedRule'];
+export type FeedbackKind = Schemas['FeedbackEventCreate']['kind'];
+export type Rating = NonNullable<Schemas['RatingUpdate']['rating']>;
 
-export type HttpMethod = 'get' | 'post' | 'patch' | 'delete';
+export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 /** The API paths that accept ``Method``. */
 export type PathsWith<Method extends HttpMethod> = {

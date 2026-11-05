@@ -1,4 +1,10 @@
-import type { ChatRead, ChatTurn, MessageRead } from '../app/core/api/api-types';
+import type {
+  ChatRead,
+  ChatTurn,
+  MessageRead,
+  ProductRead,
+  RecommendationRead,
+} from '../app/core/api/api-types';
 import type { AppConfig } from '../app/core/config/app-config';
 
 export const TEST_CONFIG: AppConfig = {
@@ -43,6 +49,41 @@ export function turn(overrides: Partial<ChatTurn> = {}): ChatTurn {
     add_all_to_cart_url: null,
     order_by: null,
     chat: chat({ updated_at: '2026-11-05T10:00:00Z' }),
+    ...overrides,
+  };
+}
+
+export function product(overrides: Partial<ProductRead> = {}): ProductRead {
+  const asin = overrides.asin ?? 'B000COFFEE';
+  return {
+    asin,
+    title: 'Pour-over coffee kit',
+    brand: 'Brewline',
+    main_category: 'Home & Kitchen',
+    category_path: ['Home & Kitchen', 'Coffee'],
+    image_url: `https://images.test/${asin}.jpg`,
+    price_2023: '34.99',
+    rating_average: 4.62,
+    rating_count: 1234,
+    short_description: null,
+    amazon_url: `https://www.amazon.com/dp/${asin}`,
+    amazon_search_url: 'https://www.amazon.com/s?k=Pour-over+coffee+kit',
+    ...overrides,
+  };
+}
+
+export function pick(overrides: Partial<RecommendationRead> = {}): RecommendationRead {
+  const item = overrides.product ?? product();
+  return {
+    id: 'pick-1',
+    message_id: 'reply',
+    rank: 1,
+    reason: 'She loves slow mornings and good coffee.',
+    rules: [{ id: 'R-002', kind: 'do', rule: 'Choose something they will use often.' }],
+    rating: null,
+    availability: { status: 'unverified', found_votes: 0, not_found_votes: 0, your_vote: null },
+    add_to_cart_url: `https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=${item.asin}&Quantity.1=1`,
+    product: item,
     ...overrides,
   };
 }

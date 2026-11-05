@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: giftai  # local-only credentials, never used in a hosted database
       POSTGRES_DB: giftai
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./backend/scripts/create_test_database.sql:/docker-entrypoint-initdb.d/create_test_database.sql:ro
